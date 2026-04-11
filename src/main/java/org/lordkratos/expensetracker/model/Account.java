@@ -25,7 +25,7 @@ public class Account {
     @Column(name = "balance", nullable = false)
     private BigDecimal balance = BigDecimal.ZERO;
 
-    @Column(name = "currency", columnDefinition = "varchar(3) default 'PEN'")
+    @Column(name = "currency", length = 3)
     private String currency = "PEN";
 
     @Column(name = "created_at")

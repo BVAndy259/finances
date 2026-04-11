@@ -35,7 +35,7 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
             if (messageText.equals("/start")) {
                 AppUser user = appUserService.registerUserIfNotExists(chatId, userFirstName);
                 String welcomeMessage = "¡Hola, " + user.getAlias() + "! \n"
-                        + "Tu cuenta ha sido vinculada exitosamente.\\n"
+                        + "Tu cuenta ha sido vinculada exitosamente. \n"
                         + "Soy tu asistente financiero. Estoy listo para registrar tus gastos.";
 
                 sendMessage(chatId, welcomeMessage);
