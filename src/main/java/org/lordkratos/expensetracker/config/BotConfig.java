@@ -11,6 +11,7 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 public class BotConfig {
     @Bean
     public TelegramBotsApi telegramBotsApi(ExpenseTrackerBot bot) throws TelegramApiException {
+        // Crea la sesión y conecta el código con servidores de Telegram
         TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);
         api.registerBot(bot);
         return api;
