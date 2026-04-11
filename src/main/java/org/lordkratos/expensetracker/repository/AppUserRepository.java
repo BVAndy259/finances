@@ -8,5 +8,6 @@ import java.util.Optional;
 
 @Repository
 public interface AppUserRepository extends JpaRepository<AppUser, Long> {
+    // Buscar por Id del Chat de Telegram
     Optional<AppUser> findByTelegramChatId(String telegramChatId);
 }
