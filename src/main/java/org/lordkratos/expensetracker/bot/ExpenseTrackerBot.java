@@ -1,5 +1,6 @@
 package org.lordkratos.expensetracker.bot;
 
+import org.lordkratos.expensetracker.service.AccountService;
 import org.springframework.beans.factory.annotation.Value;
 import org.lordkratos.expensetracker.model.AppUser;
 import org.lordkratos.expensetracker.service.AppUserService;
@@ -17,11 +18,13 @@ import java.util.List;
 @Component
 public class ExpenseTrackerBot extends TelegramLongPollingBot {
     private final AppUserService appUserService;
+    private final AccountService accountService;
 
     // Verifica token de bot
-    public ExpenseTrackerBot(@Value("${telegram.bot.token}") String botToken, AppUserService appUserService) {
+    public ExpenseTrackerBot(@Value("${telegram.bot.token}") String botToken, AppUserService appUserService, AccountService accountService) {
         super(botToken);
         this.appUserService = appUserService;
+        this.accountService = accountService;
     }
 
     // Nombre de bot
@@ -34,6 +37,7 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
         if (update.hasMessage() && update.getMessage().hasText()) {
+            // Verificar texto de mensaje
             String messageText = update.getMessage().getText();
             String chatId = update.getMessage().getChatId().toString();
             String userFirstName = update.getMessage().getFrom().getFirstName();
@@ -41,7 +45,14 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
             System.out.println("Mensaje recibido de " + userFirstName + ": " + messageText);
 
             if (messageText.equals("/start")) {
+                // Guardado de usuario
                 AppUser user = appUserService.registerUserIfNotExists(chatId, userFirstName);
+
+                // Verifica si el usuario tiene cuentas
+                if (accountService.getAccountsByUser(user).isEmpty()) {
+                    accountService.createdAccount(user, "Billetera Principal");
+                }
+
                 String welcomeMessage = "¡Hola, " + user.getAlias() + "! \n"
                         + "Tu cuenta ha sido vinculada exitosamente. \n"
                         + "Soy tu asistente financiero. Estoy listo para registrar tus gastos.";
@@ -50,7 +61,16 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
             } else if (messageText.equals("💸 Registrar Gasto")) {
                 sendMessage(chatId, "Has elegido Registrar Gasto. (Pronto conectaremos la lógica de la BD aquí)");
             } else if (messageText.equals("💰 Ver Mi Saldo")) {
-                sendMessage(chatId, "Has elegido Ver Saldo. (Pronto sumaremos tus cuentas aquí)");
+                // Búsqueda de usuario por Id
+                AppUser user = appUserService.getUserByTelegramId(chatId).orElse(null);
+
+                if (user != null) {
+                    // Lógica de saldo total en todas las cuentas
+                    java.math.BigDecimal total = accountService.getTotalBalance(user);
+                    sendMessage(chatId, "Tu saldo total actual es: S/ " + total);
+                } else {
+                    sendMessage(chatId, "Primero debes iniciar el bot con /start");
+                }
             } else if (messageText.equals("🏦 Mis Cuentas")) {
                 sendMessage(chatId, "Aquí podrás gestionar tus métodos de pago (Yape, Efectivo, etc).");
             } else {
