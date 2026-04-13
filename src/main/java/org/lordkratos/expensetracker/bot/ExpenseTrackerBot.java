@@ -53,7 +53,7 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
 
             if (messageText.equalsIgnoreCase("/cancelar")) {
                 clearStates(chatId);
-                sendMessageAndRemoveKeyboard(chatId, "🚫 Operación cancelada. Escribe /ayuda para ver los comandos.");
+                sendMessageAndRemoveKeyboard(chatId, "Operación cancelada. Escribe /ayuda para ver los comandos.");
                 return;
             }
 
@@ -64,7 +64,7 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
                 if (currentState.equals("ESPERANDO_NOMBRE_CUENTA")) {
                     accountService.createdAccount(user, messageText);
                     clearStates(chatId);
-                    sendMessage(chatId, "🏦 ¡Cuenta '" + messageText + "' creada con éxito! Ya puedes usarla para gastos o ingresos.");
+                    sendMessage(chatId, "¡Cuenta '" + messageText + "' creada con éxito! Ya puedes usarla para gastos o ingresos.");
                     return;
                 }
 
@@ -73,7 +73,7 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
                             .anyMatch(a -> a.getName().equalsIgnoreCase(messageText));
 
                     if (!accountExists) {
-                        sendMessage(chatId, "❌ Esa cuenta no existe. Escribe un nombre válido o usa /cancelar.");
+                        sendMessage(chatId, "Esa cuenta no existe. Escribe un nombre válido o usa /cancelar.");
                         return;
                     }
 
@@ -85,10 +85,10 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
 
                     if (currentState.equals("ESPERANDO_CUENTA_GASTO")) {
                         userStates.put(chatId, "ESPERANDO_MONTO_GASTO");
-                        sendMessage(chatId, "Has seleccionado: " + exactAccountName + "\n💸 ¿Cuánto gastaste? (Ej: 15.50)");
+                        sendMessage(chatId, "Has seleccionado: " + exactAccountName + "\n¿Cuánto gastaste? (Ej: 15.50)");
                     } else {
                         userStates.put(chatId, "ESPERANDO_MONTO_INGRESO");
-                        sendMessage(chatId, "Has seleccionado: " + exactAccountName + "\n📈 ¿Cuánto ingresó? (Ej: 50.00)");
+                        sendMessage(chatId, "Has seleccionado: " + exactAccountName + "\n¿Cuánto ingresó? (Ej: 50.00)");
                     }
                     return;
                 }
@@ -100,13 +100,13 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
 
                         if (currentState.equals("ESPERANDO_MONTO_GASTO")) {
                             userStates.put(chatId, "ESPERANDO_DESC_GASTO");
-                            sendMessage(chatId, "Monto: S/" + amount + "\n📝 ¿En qué lo gastaste? (Ej: Pasajes)");
+                            sendMessage(chatId, "Monto: S/" + amount + "\n¿En qué lo gastaste? (Ej: Pasajes)");
                         } else {
                             userStates.put(chatId, "ESPERANDO_DESC_INGRESO");
-                            sendMessage(chatId, "Monto: S/" + amount + "\n📝 ¿De dónde proviene? (Ej: Sueldo)");
+                            sendMessage(chatId, "Monto: S/" + amount + "\n¿De dónde proviene? (Ej: Sueldo)");
                         }
                     } catch (NumberFormatException e) {
-                        sendMessage(chatId, "❌ Por favor, ingresa solo números (Ej: 20.00). Si deseas salir usa /cancelar.");
+                        sendMessage(chatId, "Por favor, ingresa solo números (Ej: 20.00). Si deseas salir usa /cancelar.");
                     }
                     return;
                 }
@@ -122,13 +122,13 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
                     try {
                         if (currentState.equals("ESPERANDO_DESC_GASTO")) {
                             transactionService.registerExpense(selectedAccount, amount, messageText, "Bot");
-                            sendMessage(chatId, "✅ Gasto de S/" + amount + " en '" + messageText + "' restado de " + accountName);
+                            sendMessage(chatId, "Gasto de S/" + amount + " en '" + messageText + "' restado de " + accountName);
                         } else {
                             transactionService.registerIncome(selectedAccount, amount, messageText, "Bot");
-                            sendMessage(chatId, "📈 Ingreso de S/" + amount + " por '" + messageText + "' sumado a " + accountName);
+                            sendMessage(chatId, "Ingreso de S/" + amount + " por '" + messageText + "' sumado a " + accountName);
                         }
                     } catch (RuntimeException e) {
-                        sendMessage(chatId, "❌ Error: " + e.getMessage());
+                        sendMessage(chatId, "Error: " + e.getMessage());
                     } finally {
                         clearStates(chatId);
                     }
@@ -142,20 +142,19 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
                     case "/start":
                         user = appUserService.registerUserIfNotExists(chatId, userFirstName);
                         if (accountService.getAccountsByUser(user).isEmpty()) {
-                            accountService.createdAccount(user, "Billetera Principal");
+                            accountService.createdAccount(user, "Efectivo");
                         }
-                        sendMessageAndRemoveKeyboard(chatId, "¡Hola, " + user.getAlias() + "! 🚀\nUsa /ayuda para ver lo que puedo hacer.");
+                        sendMessageAndRemoveKeyboard(chatId, "¡Hola, " + user.getAlias() + "! \nUsa /comandos para ver lo que puedo hacer.");
                         break;
 
-                    case "/ayuda":
                     case "/comandos":
-                        String helpText = "🤖 *Comandos Disponibles:*\n\n" +
-                                "💸 /gasto - Registrar un nuevo gasto\n" +
-                                "📈 /ingreso - Registrar un nuevo ingreso\n" +
-                                "💰 /saldo - Ver tu saldo total consolidado\n" +
-                                "🏦 /cuentas - Ver todas tus cuentas\n" +
-                                "➕ /nuevacuenta - Crear una cuenta (Ej: Yape)\n" +
-                                "🚫 /cancelar - Cancelar cualquier operación";
+                        String helpText = "Comandos Disponibles:\n\n" +
+                                "/gasto - Registrar un nuevo gasto\n" +
+                                "/ingreso - Registrar un nuevo ingreso\n" +
+                                "/saldo - Ver tu saldo total consolidado\n" +
+                                "/cuentas - Ver todas tus cuentas\n" +
+                                "/nuevacuenta - Crear una cuenta (Ej: Yape)\n" +
+                                "/cancelar - Cancelar cualquier operación";
                         sendMessage(chatId, helpText);
                         break;
 
@@ -163,7 +162,7 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
                         user = appUserService.getUserByTelegramId(chatId).orElse(null);
                         if (user != null) {
                             BigDecimal total = accountService.getTotalBalance(user);
-                            sendMessage(chatId, "💰 Tu saldo total actual es: S/ " + total);
+                            sendMessage(chatId, "Tu saldo total actual es: S/ " + total);
                         }
                         break;
 
@@ -171,7 +170,7 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
                         user = appUserService.getUserByTelegramId(chatId).orElse(null);
                         if (user != null) {
                             List<Account> accounts = accountService.getAccountsByUser(user);
-                            StringBuilder sb = new StringBuilder("🏦 *Tus cuentas actuales:*\n\n");
+                            StringBuilder sb = new StringBuilder("Tus cuentas actuales:\n\n");
                             for (Account a : accounts) {
                                 sb.append("- ").append(a.getName()).append(": S/ ").append(a.getBalance()).append("\n");
                             }
@@ -181,14 +180,14 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
 
                     case "/nuevacuenta":
                         userStates.put(chatId, "ESPERANDO_NOMBRE_CUENTA");
-                        sendMessage(chatId, "➕ Vamos a crear una nueva cuenta.\n¿Cómo se llama? (Ej: Yape, BCP, Efectivo):");
+                        sendMessage(chatId, "Vamos a crear una nueva cuenta.\n¿Cómo se llama? (Ej: Yape, BCP, Efectivo):");
                         break;
 
                     case "/gasto":
                         user = appUserService.getUserByTelegramId(chatId).orElse(null);
                         if (user != null) {
                             userStates.put(chatId, "ESPERANDO_CUENTA_GASTO");
-                            sendAccountListPrompt(chatId, accountService.getAccountsByUser(user), "💸 ¿De qué cuenta salió el dinero?");
+                            sendAccountListPrompt(chatId, accountService.getAccountsByUser(user), "¿De qué cuenta salió el dinero?");
                         }
                         break;
 
@@ -196,26 +195,26 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
                         user = appUserService.getUserByTelegramId(chatId).orElse(null);
                         if (user != null) {
                             userStates.put(chatId, "ESPERANDO_CUENTA_INGRESO");
-                            sendAccountListPrompt(chatId, accountService.getAccountsByUser(user), "📈 ¿A qué cuenta ingresó el dinero?");
+                            sendAccountListPrompt(chatId, accountService.getAccountsByUser(user), "¿A qué cuenta ingresó el dinero?");
                         }
                         break;
 
                     default:
-                        sendMessage(chatId, "Comando no reconocido. Escribe /ayuda para ver la lista de comandos.");
+                        sendMessage(chatId, "Comando no reconocido. Escribe /comandos para ver la lista de comandos.");
                         break;
                 }
             } else {
-                sendMessage(chatId, "No entiendo ese mensaje. Por favor usa un comando como /gasto o /ayuda.");
+                sendMessage(chatId, "No entiendo ese mensaje. Por favor usa un comando como /gasto.");
             }
         }
     }
 
     private void sendAccountListPrompt(String chatId, List<Account> accounts, String question) {
-        StringBuilder sb = new StringBuilder(question).append("\n\n*Tus cuentas son:*\n");
+        StringBuilder sb = new StringBuilder(question).append("\n\nTus cuentas son:\n");
         for (Account a : accounts) {
             sb.append("- ").append(a.getName()).append("\n");
         }
-        sb.append("\n✍️ Escribe el nombre de la cuenta:");
+        sb.append("\nEscribe el nombre de la cuenta:");
         sendMessage(chatId, sb.toString());
     }
 
