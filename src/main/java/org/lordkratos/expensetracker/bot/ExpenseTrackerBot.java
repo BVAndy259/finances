@@ -62,7 +62,6 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
                 AppUser user = appUserService.getUserByTelegramId(chatId).get();
 
                 if (currentState.equals("ESPERANDO_NOMBRE_CUENTA")) {
-                    // Nota: Asegúrate de que tu método en AccountService se llame 'createAccount' o 'createdAccount' según lo tengas
                     accountService.createdAccount(user, messageText);
                     clearStates(chatId);
                     sendMessage(chatId, "🏦 ¡Cuenta '" + messageText + "' creada con éxito! Ya puedes usarla para gastos o ingresos.");
