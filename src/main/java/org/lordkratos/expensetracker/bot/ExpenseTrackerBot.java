@@ -1,5 +1,6 @@
 package org.lordkratos.expensetracker.bot;
 
+import org.lordkratos.expensetracker.model.Account;
 import org.lordkratos.expensetracker.service.AccountService;
 import org.lordkratos.expensetracker.service.TransactionService;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,189 +10,238 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class ExpenseTrackerBot extends TelegramLongPollingBot {
+
     private final AppUserService appUserService;
     private final AccountService accountService;
     private final TransactionService transactionService;
-    // Guarda que hace el usuario
-    private final Map<String, String> userStates = new ConcurrentHashMap<>();
-    // Guarda el monto temporal hasta registrar descripción
-    private final Map<String, BigDecimal> tempAmounts = new ConcurrentHashMap<>();
 
-    // Verifica token de bot
-    public ExpenseTrackerBot(@Value("${telegram.bot.token}") String botToken, AppUserService appUserService, AccountService accountService, TransactionService transactionService) {
+    private final Map<String, String> userStates = new ConcurrentHashMap<>();
+    private final Map<String, BigDecimal> tempAmounts = new ConcurrentHashMap<>();
+    private final Map<String, String> tempAccounts = new ConcurrentHashMap<>();
+
+    public ExpenseTrackerBot(@Value("${telegram.bot.token}") String botToken,
+                             AppUserService appUserService,
+                             AccountService accountService,
+                             TransactionService transactionService) {
         super(botToken);
         this.appUserService = appUserService;
         this.accountService = accountService;
         this.transactionService = transactionService;
     }
 
-    // Nombre de bot
     @Override
     public String getBotUsername() {
         return "kratos_finanzas_bot";
     }
 
-
     @Override
     public void onUpdateReceived(Update update) {
         if (update.hasMessage() && update.getMessage().hasText()) {
-            // Verificar texto de mensaje
-            String messageText = update.getMessage().getText();
+            String messageText = update.getMessage().getText().trim();
             String chatId = update.getMessage().getChatId().toString();
             String userFirstName = update.getMessage().getFrom().getFirstName();
 
-            System.out.println("Mensaje recibido de " + userFirstName + ": " + messageText);
+            if (messageText.equalsIgnoreCase("/cancelar")) {
+                clearStates(chatId);
+                sendMessageAndRemoveKeyboard(chatId, "🚫 Operación cancelada. Escribe /ayuda para ver los comandos.");
+                return;
+            }
 
-            // Mientras el usuario está en actividad
             if (userStates.containsKey(chatId)) {
                 String currentState = userStates.get(chatId);
+                AppUser user = appUserService.getUserByTelegramId(chatId).get();
 
-                if (currentState.equals("ESPERANDO_MONTO_GASTO")) {
-                    try {
-                        // Conversión de dinero ingresado
-                        BigDecimal amount = new BigDecimal(messageText);
-                        tempAmounts.put(chatId, amount); // Guardado temporal
-                        userStates.put(chatId, "ESPERANDO_DESC_GASTO");
-                        sendMessage(chatId, "Monto anotado: S/" + amount + "\n¿En qué lo gastaste? (Ej: Almuerzo, Pasajes)");
-                    } catch (NumberFormatException e) {
-                        sendMessage(chatId, "Por favor, ingresa solo números válidos. (Ej: 15.50)");
+                if (currentState.equals("ESPERANDO_NOMBRE_CUENTA")) {
+                    // Nota: Asegúrate de que tu método en AccountService se llame 'createAccount' o 'createdAccount' según lo tengas
+                    accountService.createdAccount(user, messageText);
+                    clearStates(chatId);
+                    sendMessage(chatId, "🏦 ¡Cuenta '" + messageText + "' creada con éxito! Ya puedes usarla para gastos o ingresos.");
+                    return;
+                }
+
+                if (currentState.equals("ESPERANDO_CUENTA_GASTO") || currentState.equals("ESPERANDO_CUENTA_INGRESO")) {
+                    boolean accountExists = accountService.getAccountsByUser(user).stream()
+                            .anyMatch(a -> a.getName().equalsIgnoreCase(messageText));
+
+                    if (!accountExists) {
+                        sendMessage(chatId, "❌ Esa cuenta no existe. Escribe un nombre válido o usa /cancelar.");
+                        return;
+                    }
+
+                    String exactAccountName = accountService.getAccountsByUser(user).stream()
+                            .filter(a -> a.getName().equalsIgnoreCase(messageText))
+                            .findFirst().get().getName();
+
+                    tempAccounts.put(chatId, exactAccountName);
+
+                    if (currentState.equals("ESPERANDO_CUENTA_GASTO")) {
+                        userStates.put(chatId, "ESPERANDO_MONTO_GASTO");
+                        sendMessage(chatId, "Has seleccionado: " + exactAccountName + "\n💸 ¿Cuánto gastaste? (Ej: 15.50)");
+                    } else {
+                        userStates.put(chatId, "ESPERANDO_MONTO_INGRESO");
+                        sendMessage(chatId, "Has seleccionado: " + exactAccountName + "\n📈 ¿Cuánto ingresó? (Ej: 50.00)");
                     }
                     return;
                 }
 
-                else if (currentState.equals("ESPERANDO_DESC_GASTO")) {
-                    BigDecimal amount = tempAmounts.get(chatId);
-                    AppUser user = appUserService.getUserByTelegramId(chatId).get();
-                    var account = accountService.getAccountsByUser(user).get(0);
-
-                    try {
-                        // Registrar el gasto
-                        transactionService.registerExpense(account, amount, messageText, "Bot");
-                        sendMessage(chatId, "✅ ¡Gasto de S/" + amount + " en '" + messageText + "' registrado con éxito!");
-                    } catch (RuntimeException e) {
-                        // Sin saldo enviado por mensaje
-                        sendMessage(chatId, "❌ No se pudo registrar: " + e.getMessage());
-                    } finally {
-                        // Limpiar memoria
-                        userStates.remove(chatId);
-                        tempAmounts.remove(chatId);
-                    }
-                    return;
-                }
-
-                else if (currentState.equals("ESPERANDO_MONTO_INGRESO")) {
+                else if (currentState.equals("ESPERANDO_MONTO_GASTO") || currentState.equals("ESPERANDO_MONTO_INGRESO")) {
                     try {
                         BigDecimal amount = new BigDecimal(messageText);
                         tempAmounts.put(chatId, amount);
-                        userStates.put(chatId, "ESPERANDO_DESC_INGRESO");
-                        sendMessage(chatId, "Monto anotado: S/" + amount + "\n¿De dónde proviene este ingreso? (Ej: Sueldo, Yape de amigo)");
+
+                        if (currentState.equals("ESPERANDO_MONTO_GASTO")) {
+                            userStates.put(chatId, "ESPERANDO_DESC_GASTO");
+                            sendMessage(chatId, "Monto: S/" + amount + "\n📝 ¿En qué lo gastaste? (Ej: Pasajes)");
+                        } else {
+                            userStates.put(chatId, "ESPERANDO_DESC_INGRESO");
+                            sendMessage(chatId, "Monto: S/" + amount + "\n📝 ¿De dónde proviene? (Ej: Sueldo)");
+                        }
                     } catch (NumberFormatException e) {
-                        sendMessage(chatId, "Por favor, ingresa solo números válidos. (Ej: 100.00)");
+                        sendMessage(chatId, "❌ Por favor, ingresa solo números (Ej: 20.00). Si deseas salir usa /cancelar.");
                     }
                     return;
                 }
 
-                else if (currentState.equals("ESPERANDO_DESC_INGRESO")) {
+                else if (currentState.equals("ESPERANDO_DESC_GASTO") || currentState.equals("ESPERANDO_DESC_INGRESO")) {
                     BigDecimal amount = tempAmounts.get(chatId);
-                    AppUser user = appUserService.getUserByTelegramId(chatId).get();
-                    var account = accountService.getAccountsByUser(user).get(0);
+                    String accountName = tempAccounts.get(chatId);
 
-                    // Suma de dinero
-                    transactionService.registerIncome(account, amount, messageText, "Bot");
+                    Account selectedAccount = accountService.getAccountsByUser(user).stream()
+                            .filter(a -> a.getName().equals(accountName))
+                            .findFirst().get();
 
-                    userStates.remove(chatId);
-                    tempAmounts.remove(chatId);
-
-                    sendMessage(chatId, "📈 ¡Ingreso de S/" + amount + " por '" + messageText + "' registrado con éxito!");
+                    try {
+                        if (currentState.equals("ESPERANDO_DESC_GASTO")) {
+                            transactionService.registerExpense(selectedAccount, amount, messageText, "Bot");
+                            sendMessage(chatId, "✅ Gasto de S/" + amount + " en '" + messageText + "' restado de " + accountName);
+                        } else {
+                            transactionService.registerIncome(selectedAccount, amount, messageText, "Bot");
+                            sendMessage(chatId, "📈 Ingreso de S/" + amount + " por '" + messageText + "' sumado a " + accountName);
+                        }
+                    } catch (RuntimeException e) {
+                        sendMessage(chatId, "❌ Error: " + e.getMessage());
+                    } finally {
+                        clearStates(chatId);
+                    }
                     return;
                 }
             }
 
-            // Mientras el usuario está inactivo
-            if (messageText.equals("/start")) {
-                AppUser user = appUserService.registerUserIfNotExists(chatId, userFirstName);
-                if (accountService.getAccountsByUser(user).isEmpty()) {
-                    accountService.createdAccount(user, "Billetera Principal");
+            if (messageText.startsWith("/")) {
+                AppUser user;
+                switch (messageText.toLowerCase()) {
+                    case "/start":
+                        user = appUserService.registerUserIfNotExists(chatId, userFirstName);
+                        if (accountService.getAccountsByUser(user).isEmpty()) {
+                            accountService.createdAccount(user, "Billetera Principal");
+                        }
+                        sendMessageAndRemoveKeyboard(chatId, "¡Hola, " + user.getAlias() + "! 🚀\nUsa /ayuda para ver lo que puedo hacer.");
+                        break;
+
+                    case "/ayuda":
+                    case "/comandos":
+                        String helpText = "🤖 *Comandos Disponibles:*\n\n" +
+                                "💸 /gasto - Registrar un nuevo gasto\n" +
+                                "📈 /ingreso - Registrar un nuevo ingreso\n" +
+                                "💰 /saldo - Ver tu saldo total consolidado\n" +
+                                "🏦 /cuentas - Ver todas tus cuentas\n" +
+                                "➕ /nuevacuenta - Crear una cuenta (Ej: Yape)\n" +
+                                "🚫 /cancelar - Cancelar cualquier operación";
+                        sendMessage(chatId, helpText);
+                        break;
+
+                    case "/saldo":
+                        user = appUserService.getUserByTelegramId(chatId).orElse(null);
+                        if (user != null) {
+                            BigDecimal total = accountService.getTotalBalance(user);
+                            sendMessage(chatId, "💰 Tu saldo total actual es: S/ " + total);
+                        }
+                        break;
+
+                    case "/cuentas":
+                        user = appUserService.getUserByTelegramId(chatId).orElse(null);
+                        if (user != null) {
+                            List<Account> accounts = accountService.getAccountsByUser(user);
+                            StringBuilder sb = new StringBuilder("🏦 *Tus cuentas actuales:*\n\n");
+                            for (Account a : accounts) {
+                                sb.append("- ").append(a.getName()).append(": S/ ").append(a.getBalance()).append("\n");
+                            }
+                            sendMessage(chatId, sb.toString());
+                        }
+                        break;
+
+                    case "/nuevacuenta":
+                        userStates.put(chatId, "ESPERANDO_NOMBRE_CUENTA");
+                        sendMessage(chatId, "➕ Vamos a crear una nueva cuenta.\n¿Cómo se llama? (Ej: Yape, BCP, Efectivo):");
+                        break;
+
+                    case "/gasto":
+                        user = appUserService.getUserByTelegramId(chatId).orElse(null);
+                        if (user != null) {
+                            userStates.put(chatId, "ESPERANDO_CUENTA_GASTO");
+                            sendAccountListPrompt(chatId, accountService.getAccountsByUser(user), "💸 ¿De qué cuenta salió el dinero?");
+                        }
+                        break;
+
+                    case "/ingreso":
+                        user = appUserService.getUserByTelegramId(chatId).orElse(null);
+                        if (user != null) {
+                            userStates.put(chatId, "ESPERANDO_CUENTA_INGRESO");
+                            sendAccountListPrompt(chatId, accountService.getAccountsByUser(user), "📈 ¿A qué cuenta ingresó el dinero?");
+                        }
+                        break;
+
+                    default:
+                        sendMessage(chatId, "Comando no reconocido. Escribe /ayuda para ver la lista de comandos.");
+                        break;
                 }
-                sendMenu(chatId, "¡Hola, " + user.getAlias() + "! 🚀\nElige una opción del menú abajo:");
-            }
-            else if (messageText.equals("💰 Ver Mi Saldo")) {
-                AppUser user = appUserService.getUserByTelegramId(chatId).orElse(null);
-                if (user != null) {
-                    BigDecimal total = accountService.getTotalBalance(user);
-                    sendMessage(chatId, "Tu saldo total actual es: S/ " + total);
-                }
-            }
-            else if (messageText.equals("💸 Registrar Gasto")) {
-                userStates.put(chatId, "ESPERANDO_MONTO_GASTO");
-                sendMessage(chatId, "Vamos a registrar un gasto.\nEscribe el monto usando números (Ej: 25.50):");
-            } else if (messageText.equals("📈 Ingresar Saldo")) {
-                userStates.put(chatId, "ESPERANDO_MONTO_INGRESO");
-                sendMessage(chatId, "Genial. ¿Cuánto dinero ingresó a tu cuenta? (Ej: 50.00):");
             } else {
-                sendMessage(chatId, "No reconozco ese comando. Por favor usa los botones del menú de abajo.");
+                sendMessage(chatId, "No entiendo ese mensaje. Por favor usa un comando como /gasto o /ayuda.");
             }
         }
     }
 
-    private void sendMenu(String chatId, String textToSend) {
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId);
-        message.setText(textToSend);
-
-        // Estructura del teclado
-        ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-        keyboardMarkup.setResizeKeyboard(true); // Se adapta a pantalla
-        keyboardMarkup.setOneTimeKeyboard(false); // Fija menú
-
-        // Filas de los botones
-        List<KeyboardRow> keyboard = new ArrayList<>();
-
-        // Primera fila
-        KeyboardRow row1 = new KeyboardRow();
-        row1.add("💸 Registrar Gasto");
-        keyboard.add(row1);
-
-        // Segunda fila
-        KeyboardRow row2 = new KeyboardRow();
-        row2.add("📈 Ingresar Saldo");
-        row2.add("💰 Ver Mi Saldo");
-        row2.add("🏦 Mis Cuentas");
-        keyboard.add(row2);
-
-        // Ensamblar
-        keyboardMarkup.setKeyboard(keyboard);
-        message.setReplyMarkup(keyboardMarkup);
-
-        try {
-            execute(message);
-        } catch (TelegramApiException e) {
-            System.err.println("Error al enviar el menú a Telegram: " + e.getMessage());
+    private void sendAccountListPrompt(String chatId, List<Account> accounts, String question) {
+        StringBuilder sb = new StringBuilder(question).append("\n\n*Tus cuentas son:*\n");
+        for (Account a : accounts) {
+            sb.append("- ").append(a.getName()).append("\n");
         }
+        sb.append("\n✍️ Escribe el nombre de la cuenta:");
+        sendMessage(chatId, sb.toString());
     }
 
-    // Enviar mensaje
-    private void sendMessage(String chatId, String welcomeMessage) {
+    private void clearStates(String chatId) {
+        userStates.remove(chatId);
+        tempAmounts.remove(chatId);
+        tempAccounts.remove(chatId);
+    }
+
+    private void sendMessage(String chatId, String text) {
         SendMessage message = new SendMessage();
         message.setChatId(chatId);
-        message.setText(welcomeMessage);
+        message.setText(text);
+        try { execute(message); } catch (TelegramApiException e) { e.printStackTrace(); }
+    }
 
-        try {
-            execute(message);
-        } catch (TelegramApiException e) {
-            System.err.println("Error al enviar mensaje a Telegram: " + e.getMessage());
-        }
+    private void sendMessageAndRemoveKeyboard(String chatId, String text) {
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId);
+        message.setText(text);
+
+        ReplyKeyboardRemove removeKeyboard = new ReplyKeyboardRemove();
+        removeKeyboard.setRemoveKeyboard(true);
+        message.setReplyMarkup(removeKeyboard);
+
+        try { execute(message); } catch (TelegramApiException e) { e.printStackTrace(); }
     }
 }
