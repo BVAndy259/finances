@@ -53,10 +53,11 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
 
             if (messageText.equalsIgnoreCase("/cancelar")) {
                 clearStates(chatId);
-                sendMessageAndRemoveKeyboard(chatId, "Operación cancelada. Escribe /ayuda para ver los comandos.");
+                sendMessageAndRemoveKeyboard(chatId, "Operación cancelada. Escribe /comandos para ver las opciones.");
                 return;
             }
 
+            // --- Estados ---
             if (userStates.containsKey(chatId)) {
                 String currentState = userStates.get(chatId);
                 AppUser user = appUserService.getUserByTelegramId(chatId).get();
@@ -68,6 +69,7 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
                     return;
                 }
 
+                // Gasto o Ingreso
                 if (currentState.equals("ESPERANDO_CUENTA_GASTO") || currentState.equals("ESPERANDO_CUENTA_INGRESO")) {
                     boolean accountExists = accountService.getAccountsByUser(user).stream()
                             .anyMatch(a -> a.getName().equalsIgnoreCase(messageText));
@@ -93,7 +95,41 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
                     return;
                 }
 
-                else if (currentState.equals("ESPERANDO_MONTO_GASTO") || currentState.equals("ESPERANDO_MONTO_INGRESO")) {
+                // Transferencia entre cuentas
+                else if (currentState.equals("ESPERANDO_CUENTA_ORIGEN_TRANSF") || currentState.equals("ESPERANDO_CUENTA_DESTINO_TRANSF")) {
+                    boolean accountExists = accountService.getAccountsByUser(user).stream()
+                            .anyMatch(a -> a.getName().equalsIgnoreCase(messageText));
+
+                    if (!accountExists) {
+                        sendMessage(chatId, "Esa cuenta no existe. Escribe un nombre válido o usa /cancelar.");
+                        return;
+                    }
+
+                    String exactAccountName = accountService.getAccountsByUser(user).stream()
+                            .filter(a -> a.getName().equalsIgnoreCase(messageText))
+                            .findFirst().get().getName();
+
+                    if (currentState.equals("ESPERANDO_CUENTA_ORIGEN_TRANSF")) {
+                        tempAccounts.put(chatId + "_ORIGEN", exactAccountName);
+                        userStates.put(chatId, "ESPERANDO_CUENTA_DESTINO_TRANSF");
+                        sendAccountListPrompt(chatId, accountService.getAccountsByUser(user), "¿A qué cuenta irá el dinero? (DESTINO)");
+                    } else {
+                        if (exactAccountName.equals(tempAccounts.get(chatId + "_ORIGEN"))) {
+                            sendMessage(chatId, "No puedes transferir a la misma cuenta de origen. Escribe otra cuenta destino:");
+                            return;
+                        }
+                        tempAccounts.put(chatId + "_DESTINO", exactAccountName);
+                        userStates.put(chatId, "ESPERANDO_MONTO_TRANSF");
+                        String origen = tempAccounts.get(chatId + "_ORIGEN");
+                        sendMessage(chatId, "Moviendo de " + origen + " ➡️ " + exactAccountName + "\n¿Cuánto vas a transferir? (Ej: 100.00)");
+                    }
+                    return;
+                }
+
+                // Capturar Monto
+                else if (currentState.equals("ESPERANDO_MONTO_GASTO") ||
+                        currentState.equals("ESPERANDO_MONTO_INGRESO") ||
+                        currentState.equals("ESPERANDO_MONTO_TRANSF")) {
                     try {
                         BigDecimal amount = new BigDecimal(messageText);
                         tempAmounts.put(chatId, amount);
@@ -101,9 +137,12 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
                         if (currentState.equals("ESPERANDO_MONTO_GASTO")) {
                             userStates.put(chatId, "ESPERANDO_DESC_GASTO");
                             sendMessage(chatId, "Monto: S/" + amount + "\n¿En qué lo gastaste? (Ej: Pasajes)");
-                        } else {
+                        } else if (currentState.equals("ESPERANDO_MONTO_INGRESO")) {
                             userStates.put(chatId, "ESPERANDO_DESC_INGRESO");
                             sendMessage(chatId, "Monto: S/" + amount + "\n¿De dónde proviene? (Ej: Sueldo)");
+                        } else {
+                            userStates.put(chatId, "ESPERANDO_DESC_TRANSF");
+                            sendMessage(chatId, "Monto: S/" + amount + "\n¿Motivo de la transferencia? (Ej: Ahorro mensual)");
                         }
                     } catch (NumberFormatException e) {
                         sendMessage(chatId, "Por favor, ingresa solo números (Ej: 20.00). Si deseas salir usa /cancelar.");
@@ -111,21 +150,38 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
                     return;
                 }
 
-                else if (currentState.equals("ESPERANDO_DESC_GASTO") || currentState.equals("ESPERANDO_DESC_INGRESO")) {
-                    BigDecimal amount = tempAmounts.get(chatId);
-                    String accountName = tempAccounts.get(chatId);
+                // Capturar descripcion
+                else if (currentState.equals("ESPERANDO_DESC_GASTO") ||
+                        currentState.equals("ESPERANDO_DESC_INGRESO") ||
+                        currentState.equals("ESPERANDO_DESC_TRANSF")) {
 
-                    Account selectedAccount = accountService.getAccountsByUser(user).stream()
-                            .filter(a -> a.getName().equals(accountName))
-                            .findFirst().get();
+                    BigDecimal amount = tempAmounts.get(chatId);
 
                     try {
-                        if (currentState.equals("ESPERANDO_DESC_GASTO")) {
-                            transactionService.registerExpense(selectedAccount, amount, messageText, "Bot");
-                            sendMessage(chatId, "Gasto de S/" + amount + " en '" + messageText + "' restado de " + accountName);
-                        } else {
-                            transactionService.registerIncome(selectedAccount, amount, messageText, "Bot");
-                            sendMessage(chatId, "Ingreso de S/" + amount + " por '" + messageText + "' sumado a " + accountName);
+                        if (currentState.equals("ESPERANDO_DESC_GASTO") || currentState.equals("ESPERANDO_DESC_INGRESO")) {
+                            String accountName = tempAccounts.get(chatId);
+                            Account selectedAccount = accountService.getAccountsByUser(user).stream()
+                                    .filter(a -> a.getName().equals(accountName))
+                                    .findFirst().get();
+
+                            if (currentState.equals("ESPERANDO_DESC_GASTO")) {
+                                transactionService.registerExpense(selectedAccount, amount, messageText, "Bot");
+                                sendMessage(chatId, "Gasto de S/" + amount + " en '" + messageText + "' restado de " + accountName);
+                            } else {
+                                transactionService.registerIncome(selectedAccount, amount, messageText, "Bot");
+                                sendMessage(chatId, "Ingreso de S/" + amount + " por '" + messageText + "' sumado a " + accountName);
+                            }
+                        }
+                        else if (currentState.equals("ESPERANDO_DESC_TRANSF")) {
+                            Account origin = accountService.getAccountsByUser(user).stream()
+                                    .filter(a -> a.getName().equals(tempAccounts.get(chatId + "_ORIGEN")))
+                                    .findFirst().get();
+                            Account dest = accountService.getAccountsByUser(user).stream()
+                                    .filter(a -> a.getName().equals(tempAccounts.get(chatId + "_DESTINO")))
+                                    .findFirst().get();
+
+                            transactionService.transfer(origin, dest, amount, messageText, "Bot");
+                            sendMessage(chatId, "Transferencia completada:\nDe: " + origin.getName() + " A: " + dest.getName());
                         }
                     } catch (RuntimeException e) {
                         sendMessage(chatId, "Error: " + e.getMessage());
@@ -136,6 +192,7 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
                 }
             }
 
+            // Comandos
             if (messageText.startsWith("/")) {
                 AppUser user;
                 switch (messageText.toLowerCase()) {
@@ -151,6 +208,7 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
                         String helpText = "Comandos Disponibles:\n\n" +
                                 "/gasto - Registrar un nuevo gasto\n" +
                                 "/ingreso - Registrar un nuevo ingreso\n" +
+                                "/transferir - Mover dinero entre cuentas\n" +
                                 "/saldo - Ver tu saldo total consolidado\n" +
                                 "/cuentas - Ver todas tus cuentas\n" +
                                 "/nuevacuenta - Crear una cuenta (Ej: Yape)\n" +
@@ -199,6 +257,19 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
                         }
                         break;
 
+                    case "/transferir":
+                        user = appUserService.getUserByTelegramId(chatId).orElse(null);
+                        if (user != null) {
+                            List<Account> accounts = accountService.getAccountsByUser(user);
+                            if (accounts.size() < 2) {
+                                sendMessage(chatId, "Necesitas al menos 2 cuentas para hacer una transferencia.");
+                            } else {
+                                userStates.put(chatId, "ESPERANDO_CUENTA_ORIGEN_TRANSF");
+                                sendAccountListPrompt(chatId, accounts, "¿De qué cuenta saldrá el dinero? (ORIGEN)");
+                            }
+                        }
+                        break;
+
                     default:
                         sendMessage(chatId, "Comando no reconocido. Escribe /comandos para ver la lista de comandos.");
                         break;
@@ -222,6 +293,8 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
         userStates.remove(chatId);
         tempAmounts.remove(chatId);
         tempAccounts.remove(chatId);
+        tempAccounts.remove(chatId + "_ORIGEN");
+        tempAccounts.remove(chatId + "_DESTINO");
     }
 
     private void sendMessage(String chatId, String text) {
