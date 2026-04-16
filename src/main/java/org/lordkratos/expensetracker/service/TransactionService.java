@@ -55,4 +55,37 @@ public class TransactionService {
         income.setLocation(location);
         return transactionRepository.save(income);
     }
+
+    @Transactional
+    public void transfer(Account originAccount, Account destinationAccount, BigDecimal amount, String description, String location) {
+        // Verificar fondos en la cuenta origen
+        if (originAccount.getBalance().compareTo(amount) < 0) {
+            throw new RuntimeException("Saldo insuficiente en la cuenta origen: " + originAccount.getName());
+        }
+
+        // Resta en cuenta origen
+        originAccount.setBalance(originAccount.getBalance().subtract(amount));
+        accountRepository.save(originAccount);
+
+        // Sumar en cuenta destino
+        destinationAccount.setBalance(destinationAccount.getBalance().add(amount));
+        accountRepository.save(destinationAccount);
+
+        // Registrar en historial
+        Transaction out = new Transaction();
+        out.setAccount(originAccount);
+        out.setTransactionType("TRANSFERENCIA_SALIDA");
+        out.setAmount(amount);
+        out.setDescription("A " + destinationAccount.getName() + ": " + description);
+        out.setLocation(location);
+        transactionRepository.save(out);
+
+        Transaction in = new Transaction();
+        in.setAccount(destinationAccount);
+        in.setTransactionType("TRANSFERENCIA_ENTRADA");
+        in.setAmount(amount);
+        in.setDescription("De " + originAccount.getName() + ": " + description);
+        in.setLocation(location);
+        transactionRepository.save(in);
+    }
 }
