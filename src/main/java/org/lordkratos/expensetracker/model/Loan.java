@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -28,9 +29,19 @@ public class Loan {
     @Column(name = "amount", nullable = false)
     private BigDecimal amount;
 
+    @Column(name = "paid_amount", nullable = false, columnDefinition = "numeric(12,2) default 0")
+    private BigDecimal paidAmount = BigDecimal.ZERO;
+
+    @Column(name = "due_date")
+    private LocalDate dueDate;
+
     @Column(name = "status")
     private String status = "PENDIENTE";
 
     @Column(name = "created_at")
     private LocalDateTime loanDate = LocalDateTime.now();
+
+    public BigDecimal getRemainingAmount() {
+        return amount.subtract(paidAmount);
+    }
 }
