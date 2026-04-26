@@ -42,6 +42,9 @@ public class Loan {
     private LocalDateTime loanDate = LocalDateTime.now();
 
     public BigDecimal getRemainingAmount() {
-        return amount.subtract(paidAmount);
+        BigDecimal safeAmount = (amount != null) ? amount : BigDecimal.ZERO;
+        BigDecimal safePaidAmount = (paidAmount != null) ? paidAmount : BigDecimal.ZERO;
+
+        return safeAmount.subtract(safePaidAmount);
     }
 }

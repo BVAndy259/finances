@@ -9,6 +9,6 @@ import java.util.List;
 
 @Repository
 public interface LoanRepository extends JpaRepository<Loan, Long> {
-    // Buscar usuarios según número de estado diferente
-    List<Loan> findByUserAndStatusNot(AppUser user, String status);
+    // Buscar usuarios según número de estado
+    List<Loan> findByUserAndStatusIn(AppUser user, List<String> statuses);
 }

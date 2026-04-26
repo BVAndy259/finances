@@ -16,6 +16,9 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRem
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -165,15 +168,53 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
                     return;
                 }
 
+                else if (currentState.equals("ESPERANDO_DESC_PRESTAMO")) {
+                    tempAccounts.put(chatId + "_DESC_PRESTAMO", messageText);
+                    userStates.put(chatId, "ESPERANDO_FECHA_PRESTAMO");
+                    sendMessage(chatId, "¿Tiene fecha límite de pago? (Escribe en formato DD/MM/AAAA o responde 'NO')");
+                    return;
+                }
+
+                else if (currentState.equals("ESPERANDO_FECHA_PRESTAMO")) {
+                    LocalDate dueDate = null;
+                    if (!messageText.equalsIgnoreCase("NO")) {
+                        try {
+                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                            dueDate = LocalDate.parse(messageText, formatter);
+                        } catch (DateTimeParseException e) {
+                            sendMessage(chatId, "Formato de fecha inválido. Usa DD/MM/AAAA (Ej: 25/12/2026) o escribe 'NO'.");
+                            return;
+                        }
+                    }
+
+                    BigDecimal amount = tempAmounts.get(chatId);
+                    String accountName = tempAccounts.get(chatId);
+                    String debtor = tempAccounts.get(chatId + "_DEUDOR");
+                    String description = tempAccounts.get(chatId + "_DESC_PRESTAMO");
+
+                    try {
+                        Account selectedAccount = accountService.getAccountsByUser(user).stream()
+                                .filter(a -> a.getName().equals(accountName))
+                                .findFirst().get();
+
+                        loanService.grantLoan(selectedAccount, amount, debtor, description, dueDate);
+                        sendMessage(chatId, "Prestaste S/" + amount + " a " + debtor + ". ¡Guardado en pendientes!");
+                    } catch (RuntimeException e) {
+                        sendMessage(chatId, "Error: " + e.getMessage());
+                    } finally {
+                        clearStates(chatId);
+                    }
+                    return;
+                }
+
                 else if (currentState.equals("ESPERANDO_DESC_GASTO") ||
                         currentState.equals("ESPERANDO_DESC_INGRESO") ||
-                        currentState.equals("ESPERANDO_DESC_TRANSF") ||
-                        currentState.equals("ESPERANDO_DESC_PRESTAMO")) {
+                        currentState.equals("ESPERANDO_DESC_TRANSF")) {
 
                     BigDecimal amount = tempAmounts.get(chatId);
 
                     try {
-                        if (currentState.equals("ESPERANDO_DESC_GASTO") || currentState.equals("ESPERANDO_DESC_INGRESO") || currentState.equals("ESPERANDO_DESC_PRESTAMO")) {
+                        if (currentState.equals("ESPERANDO_DESC_GASTO") || currentState.equals("ESPERANDO_DESC_INGRESO")) {
                             String accountName = tempAccounts.get(chatId);
                             Account selectedAccount = accountService.getAccountsByUser(user).stream()
                                     .filter(a -> a.getName().equals(accountName))
@@ -185,10 +226,6 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
                             } else if (currentState.equals("ESPERANDO_DESC_INGRESO")) {
                                 transactionService.registerIncome(selectedAccount, amount, messageText, "Bot");
                                 sendMessage(chatId, "Ingreso de S/" + amount + " registrado.");
-                            } else if (currentState.equals("ESPERANDO_DESC_PRESTAMO")) {
-                                String debtor = tempAccounts.get(chatId + "_DEUDOR");
-                                loanService.grantLoan(selectedAccount, amount, debtor, messageText);
-                                sendMessage(chatId, "Prestaste S/" + amount + " a " + debtor + ". ¡Guardado en pendientes!");
                             }
                         }
                         else if (currentState.equals("ESPERANDO_DESC_TRANSF")) {
@@ -213,7 +250,6 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
                 else if (currentState.equals("ESPERANDO_ID_PRESTAMO")) {
                     try {
                         Long loanId = Long.parseLong(messageText);
-                        // Validar que el ID sea de un préstamo pendiente suyo
                         boolean validId = loanService.getPendingLoans(user).stream()
                                 .anyMatch(l -> l.getId().equals(loanId));
 
@@ -223,10 +259,28 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
                         }
 
                         tempAccounts.put(chatId + "_LOAN_ID", messageText);
+
+                        Loan loan = loanService.getPendingLoans(user).stream()
+                                .filter(l -> l.getId().equals(loanId)).findFirst().get();
+
+                        userStates.put(chatId, "ESPERANDO_MONTO_COBRO");
+                        sendMessage(chatId, "La deuda actual es de: S/" + loan.getRemainingAmount() + "\n¿Cuánto dinero te abonó hoy? (Ej: 15.00)");
+
+                    } catch (NumberFormatException e) {
+                        sendMessage(chatId, "Ingresa solo el número de ID (Ej: 1).");
+                    }
+                    return;
+                }
+
+                else if (currentState.equals("ESPERANDO_MONTO_COBRO")) {
+                    try {
+                        BigDecimal paymentAmount = new BigDecimal(messageText);
+                        tempAmounts.put(chatId + "_PAGO", paymentAmount);
+
                         userStates.put(chatId, "ESPERANDO_CUENTA_COBRO");
                         sendAccountListPrompt(chatId, accountService.getAccountsByUser(user), "¿A qué cuenta ingresó el dinero que te devolvieron?");
                     } catch (NumberFormatException e) {
-                        sendMessage(chatId, "Ingresa solo el número de ID (Ej: 1).");
+                        sendMessage(chatId, "Por favor, ingresa solo números (Ej: 20.00).");
                     }
                     return;
                 }
@@ -250,9 +304,16 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
                                 .findFirst().get();
 
                         Long loanId = Long.parseLong(tempAccounts.get(chatId + "_LOAN_ID"));
-                        loanService.payLoan(loanId, destAccount);
+                        BigDecimal paymentAmount = tempAmounts.get(chatId + "_PAGO");
 
-                        sendMessage(chatId, "¡Cobro exitoso! El dinero se ha sumado a tu cuenta " + exactAccountName + " y el préstamo está marcado como PAGADO.");
+                        Loan updatedLoan = loanService.payLoan(loanId, destAccount, paymentAmount);
+
+                        if (updatedLoan.getStatus().equals("PAGADO")) {
+                            sendMessage(chatId, "¡Cobro exitoso! El préstamo está marcado como PAGADO.");
+                        } else {
+                            sendMessage(chatId, "¡Abono registrado! Aún te deben S/" + updatedLoan.getRemainingAmount());
+                        }
+
                     } catch (RuntimeException e) {
                         sendMessage(chatId, "Error: " + e.getMessage());
                     } finally {
@@ -264,95 +325,101 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
 
             if (messageText.startsWith("/")) {
                 AppUser user;
-                switch (messageText.toLowerCase()) {
-                    case "/start":
-                        user = appUserService.registerUserIfNotExists(chatId, userFirstName);
-                        if (accountService.getAccountsByUser(user).isEmpty()) {
-                            accountService.createdAccount(user, "Efectivo");
-                        }
-                        sendMessageAndRemoveKeyboard(chatId, "¡Hola, " + user.getAlias() + "! \nUsa /comandos para ver lo que puedo hacer.");
-                        break;
-
-                    case "/comandos":
-                        String helpText = "Comandos Disponibles:\n\n" +
-                                "/gasto - Registrar un gasto\n" +
-                                "/ingreso - Registrar un ingreso\n" +
-                                "/transferir - Mover dinero entre cuentas\n" +
-                                "/prestar - Prestar dinero a alguien\n" +
-                                "/cobrar - Registrar que te pagaron un préstamo\n" +
-                                "/prestamos - Ver quién te debe dinero\n" +
-                                "/saldo - Ver saldo total\n" +
-                                "/cuentas - Ver todas tus cuentas\n" +
-                                "/nuevacuenta - Crear una cuenta\n" +
-                                "/cancelar - Cancelar operación";
-                        sendMessage(chatId, helpText);
-                        break;
-
-                    case "/saldo":
-                        user = appUserService.getUserByTelegramId(chatId).orElse(null);
-                        if (user != null) {
-                            BigDecimal total = accountService.getTotalBalance(user);
-                            sendMessage(chatId, "Tu saldo total en cuentas es: S/ " + total);
-                        }
-                        break;
-
-                    case "/cuentas":
-                    case "/nuevacuenta":
-                    case "/gasto":
-                    case "/ingreso":
-                    case "/transferir":
-                        handleStandardCommands(messageText, chatId);
-                        break;
-
-                    case "/prestar":
-                        user = appUserService.getUserByTelegramId(chatId).orElse(null);
-                        if (user != null) {
-                            userStates.put(chatId, "ESPERANDO_CUENTA_PRESTAMO");
-                            sendAccountListPrompt(chatId, accountService.getAccountsByUser(user), "¿De qué cuenta saldrá el dinero para prestar?");
-                        }
-                        break;
-
-                    case "/cobrar":
-                        user = appUserService.getUserByTelegramId(chatId).orElse(null);
-                        if (user != null) {
-                            List<Loan> pendingLoans = loanService.getPendingLoans(user);
-                            if (pendingLoans.isEmpty()) {
-                                sendMessage(chatId, "No tienes préstamos pendientes por cobrar. ¡Todos están al día!");
-                            } else {
-                                StringBuilder sb = new StringBuilder("Préstamos Pendientes:\n\n");
-                                for (Loan l : pendingLoans) {
-                                    sb.append("ID: ").append(l.getId()).append(" | ").append(l.getDebtorName())
-                                            .append(" debe S/").append(l.getAmount()).append("\n");
-                                }
-                                sb.append("\nEscribe el número de ID del préstamo que te acaban de pagar:");
-                                userStates.put(chatId, "ESPERANDO_ID_PRESTAMO");
-                                sendMessage(chatId, sb.toString());
+                try {
+                    switch (messageText.toLowerCase()) {
+                        case "/start":
+                            user = appUserService.registerUserIfNotExists(chatId, userFirstName);
+                            if (accountService.getAccountsByUser(user).isEmpty()) {
+                                accountService.createdAccount(user, "Efectivo");
                             }
-                        }
-                        break;
+                            sendMessageAndRemoveKeyboard(chatId, "¡Hola, " + user.getAlias() + "! \nUsa /comandos para ver lo que puedo hacer.");
+                            break;
 
-                    case "/prestamos":
-                        user = appUserService.getUserByTelegramId(chatId).orElse(null);
-                        if (user != null) {
-                            List<Loan> pendingLoans = loanService.getPendingLoans(user);
-                            if (pendingLoans.isEmpty()) {
-                                sendMessage(chatId, "No tienes préstamos por cobrar.");
-                            } else {
-                                StringBuilder sb = new StringBuilder("Lista de Préstamos:\n\n");
-                                BigDecimal totalDeuda = BigDecimal.ZERO;
-                                for (Loan l : pendingLoans) {
-                                    sb.append("- ").append(l.getDebtorName()).append(": S/").append(l.getAmount()).append("\n");
-                                    totalDeuda = totalDeuda.add(l.getAmount());
-                                }
-                                sb.append("\nTotal de dinero prestado: S/").append(totalDeuda);
-                                sendMessage(chatId, sb.toString());
+                        case "/comandos":
+                            String helpText = "Comandos Disponibles:\n\n" +
+                                    "/gasto - Registrar un gasto\n" +
+                                    "/ingreso - Registrar un ingreso\n" +
+                                    "/transferir - Mover dinero entre cuentas\n" +
+                                    "/prestar - Prestar dinero a alguien\n" +
+                                    "/cobrar - Registrar que te pagaron un préstamo\n" +
+                                    "/prestamos - Ver quién te debe dinero\n" +
+                                    "/saldo - Ver saldo total\n" +
+                                    "/cuentas - Ver todas tus cuentas\n" +
+                                    "/nuevacuenta - Crear una cuenta\n" +
+                                    "/cancelar - Cancelar operación";
+                            sendMessage(chatId, helpText);
+                            break;
+
+                        case "/saldo":
+                            user = appUserService.getUserByTelegramId(chatId).orElse(null);
+                            if (user != null) {
+                                BigDecimal total = accountService.getTotalBalance(user);
+                                sendMessage(chatId, "Tu saldo total en cuentas es: S/ " + total);
                             }
-                        }
-                        break;
+                            break;
 
-                    default:
-                        sendMessage(chatId, "Comando no reconocido. Escribe /comandos para ver la lista de comandos.");
-                        break;
+                        case "/cuentas":
+                        case "/nuevacuenta":
+                        case "/gasto":
+                        case "/ingreso":
+                        case "/transferir":
+                            handleStandardCommands(messageText, chatId);
+                            break;
+
+                        case "/prestar":
+                            user = appUserService.getUserByTelegramId(chatId).orElse(null);
+                            if (user != null) {
+                                userStates.put(chatId, "ESPERANDO_CUENTA_PRESTAMO");
+                                sendAccountListPrompt(chatId, accountService.getAccountsByUser(user), "¿De qué cuenta saldrá el dinero para prestar?");
+                            }
+                            break;
+
+                        case "/cobrar":
+                            user = appUserService.getUserByTelegramId(chatId).orElse(null);
+                            if (user != null) {
+                                List<Loan> pendingLoans = loanService.getPendingLoans(user);
+                                if (pendingLoans.isEmpty()) {
+                                    sendMessage(chatId, "No tienes préstamos pendientes por cobrar. ¡Todos están al día!");
+                                } else {
+                                    StringBuilder sb = new StringBuilder("Préstamos Pendientes:\n\n");
+                                    for (Loan l : pendingLoans) {
+                                        sb.append("ID: ").append(l.getId()).append(" | ").append(l.getDebtorName())
+                                                .append(" debe S/").append(l.getRemainingAmount()).append("\n");
+                                    }
+                                    sb.append("\nEscribe el número de ID del préstamo que te están abonando:");
+                                    userStates.put(chatId, "ESPERANDO_ID_PRESTAMO");
+                                    sendMessage(chatId, sb.toString());
+                                }
+                            }
+                            break;
+
+                        case "/prestamos":
+                            user = appUserService.getUserByTelegramId(chatId).orElse(null);
+                            if (user != null) {
+                                List<Loan> pendingLoans = loanService.getPendingLoans(user);
+                                if (pendingLoans.isEmpty()) {
+                                    sendMessage(chatId, "No tienes préstamos por cobrar.");
+                                } else {
+                                    StringBuilder sb = new StringBuilder("Lista de Préstamos:\n\n");
+                                    BigDecimal totalDeuda = BigDecimal.ZERO;
+                                    for (Loan l : pendingLoans) {
+                                        String dateInfo = (l.getDueDate() != null) ? " (Vence: " + l.getDueDate() + ")" : "";
+                                        sb.append("- ").append(l.getDebtorName()).append(": S/").append(l.getRemainingAmount()).append(dateInfo).append("\n");
+                                        totalDeuda = totalDeuda.add(l.getRemainingAmount());
+                                    }
+                                    sb.append("\nTotal de dinero prestado S/").append(totalDeuda);
+                                    sendMessage(chatId, sb.toString());
+                                }
+                            }
+                            break;
+
+                        default:
+                            sendMessage(chatId, "Comando no reconocido. Escribe /comandos para ver la lista de comandos.");
+                            break;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    sendMessage(chatId, "Ocurrió un error interno procesando el comando: " + e.getMessage());
                 }
             } else if (!userStates.containsKey(chatId)) {
                 sendMessage(chatId, "No entiendo ese mensaje. Por favor usa un comando de la lista /comandos.");
@@ -409,10 +476,12 @@ public class ExpenseTrackerBot extends TelegramLongPollingBot {
     private void clearStates(String chatId) {
         userStates.remove(chatId);
         tempAmounts.remove(chatId);
+        tempAmounts.remove(chatId + "_PAGO");
         tempAccounts.remove(chatId);
         tempAccounts.remove(chatId + "_ORIGEN");
         tempAccounts.remove(chatId + "_DESTINO");
         tempAccounts.remove(chatId + "_DEUDOR");
+        tempAccounts.remove(chatId + "_DESC_PRESTAMO");
         tempAccounts.remove(chatId + "_LOAN_ID");
     }
 

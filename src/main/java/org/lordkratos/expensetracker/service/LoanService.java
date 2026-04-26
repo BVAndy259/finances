@@ -99,6 +99,7 @@ public class LoanService {
 
     // Buscar préstamos pendientes
     public List<Loan> getPendingLoans(AppUser user) {
-        return loanRepository.findByUserAndStatusNot(user, "PENDIENTE");
+        List<String> activeStatuses = List.of("PENDIENTE", "PAGO_PARCIAL");
+        return loanRepository.findByUserAndStatusIn(user, activeStatuses);
     }
 }
