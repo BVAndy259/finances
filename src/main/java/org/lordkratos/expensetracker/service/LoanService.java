@@ -12,6 +12,7 @@ import org.lordkratos.expensetracker.repository.TransactionRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -24,7 +25,7 @@ public class LoanService {
 
     // Prestar Dinero
     @Transactional
-    public Loan grantLoan(Account originAccount, BigDecimal amount, String debtorName, String description) {
+    public Loan grantLoan(Account originAccount, BigDecimal amount, String debtorName, String description, LocalDate dueDate) {
         // Verifica si hay fondos en las cuenta seleccionada
         if (originAccount.getBalance().compareTo(amount) < 0) {
             throw new RuntimeException("Saldo insuficiente en la cuenta: " + originAccount.getName());
@@ -49,18 +50,24 @@ public class LoanService {
         loan.setAccount(originAccount);
         loan.setDebtorName(debtorName);
         loan.setAmount(amount);
+        loan.setDueDate(dueDate);
         return loanRepository.save(loan);
     }
 
     // Cobrar Dinero
     @Transactional
-    public Loan payLoan(Long loanId, Account destinationAccount) {
+    public Loan payLoan(Long loanId, Account destinationAccount, BigDecimal paymentAmount) {
         // Buscar el prestamo
         Loan loan = loanRepository.findById(loanId).orElseThrow(() -> new RuntimeException("Préstamo no encontrado"));
 
         // Verifica si el préstamo ya fue pagado
         if (loan.getStatus().equals("PAGADO")) {
             throw new RuntimeException("Este préstam ya fue pagado");
+        }
+
+        BigDecimal remaining = loan.getRemainingAmount();
+        if (paymentAmount.compareTo(remaining) > 0) {
+            throw new RuntimeException("El monto a cobrar (S/" + paymentAmount + ") es mayor a la deuda actual (S/" + remaining + ")");
         }
 
         // Sumar dinero a la cuenta seleccionada
@@ -71,18 +78,28 @@ public class LoanService {
         Transaction in = new Transaction();
         in.setAccount(destinationAccount);
         in.setTransactionType("INGRESO_COBRO");
-        in.setAmount(loan.getAmount());
+        in.setAmount(paymentAmount);
         in.setDescription("Cobro de préstamo a " + loan.getDebtorName());
         in.setLocation("Bot");
         transactionRepository.save(in);
 
-        // Actualizar estado de préstamo
-        loan.setStatus("PAGADO");
+        // Actualizar la matemática del préstamo
+        BigDecimal newPaidAmount = loan.getPaidAmount().add(paymentAmount);
+        loan.setPaidAmount(newPaidAmount);
+
+        // Cambiar estado
+        if (newPaidAmount.compareTo(loan.getAmount()) >= 0) {
+            loan.setStatus("PAGADO");
+        } else {
+            loan.setStatus("PAGO_PARCIAL");
+        }
+
         return loanRepository.save(loan);
     }
 
     // Buscar préstamos pendientes
     public List<Loan> getPendingLoans(AppUser user) {
-        return loanRepository.findByUserAndStatus(user, "PENDIENTE");
+        List<String> activeStatuses = List.of("PENDIENTE", "PAGO_PARCIAL");
+        return loanRepository.findByUserAndStatusIn(user, activeStatuses);
     }
 }
