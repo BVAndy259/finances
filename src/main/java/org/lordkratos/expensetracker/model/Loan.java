@@ -29,7 +29,7 @@ public class Loan {
     @Column(name = "amount", nullable = false)
     private BigDecimal amount;
 
-    @Column(name = "paid_amount", nullable = false, columnDefinition = "numeric(12,2) default 0")
+    @Column(name = "paid_amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal paidAmount = BigDecimal.ZERO;
 
     @Column(name = "due_date")
