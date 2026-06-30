@@ -35,9 +35,10 @@ Si deseas correr este proyecto en tu entorno de desarrollo local, sigue estos pa
 
 1. Clona el repositorio:
    ```bash
-   git clone [https://github.com/tu-usuario/finances.git](https://github.com/tu-usuario/finances.git)
+   git clone [URL_GitHub]
    cd finances
    ```
+   O puedes hacer un fork a este proyecto para modificarlo o tenerlo en tu propia cuenta.
 2. Configura las variables de entorno para tu perfil de desarrollo. Puedes usar tu terminal (PowerShell o CMD) antes de arrancar la aplicación, o configurar el archivo application-dev.properties (asegúrate de NO subir tus credenciales a GitHub):
     ```bash
    spring.profiles.active=dev
