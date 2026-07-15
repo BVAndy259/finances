@@ -1,7 +1,7 @@
 package org.lordkratos.expensetracker.infrastructure.persistence;
 
 import org.lordkratos.expensetracker.domain.model.Account;
-import org.lordkratos.expensetracker.domain.repository.AccountRepositoryPort;
+import org.lordkratos.expensetracker.domain.port.out.AccountRepositoryPort;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
