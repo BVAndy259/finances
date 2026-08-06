@@ -1,11 +1,11 @@
-package org.lordkratos.expensetracker.service;
+package org.lordkratos.expensetracker.application.usecase;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.lordkratos.expensetracker.model.Account;
-import org.lordkratos.expensetracker.model.Transaction;
-import org.lordkratos.expensetracker.repository.AccountRepository;
-import org.lordkratos.expensetracker.repository.TransactionRepository;
+import org.lordkratos.expensetracker.domain.model.Account;
+import org.lordkratos.expensetracker.domain.model.Transaction;
+import org.lordkratos.expensetracker.domain.port.out.AccountRepositoryPort;
+import org.lordkratos.expensetracker.domain.port.out.TransactionRepositoryPort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -14,78 +14,66 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 public class TransactionService {
 
-    private final TransactionRepository transactionRepository;
-    private final AccountRepository accountRepository;
+    private final TransactionRepositoryPort transactionRepositoryPort;
+    private final AccountRepositoryPort accountRepositoryPort;
 
-    // Registrar gasto
     @Transactional
     public Transaction registerExpense(Account account, BigDecimal amount, String description, String location) {
-        // Valida si existe saldo disponible
         if (account.getBalance().compareTo(amount) < 0) {
             throw new RuntimeException("Saldo insuficiente en la cuenta: " + account.getName());
         }
-
-        // Resta saldo
         account.setBalance(account.getBalance().subtract(amount));
-        accountRepository.save(account);
+        accountRepositoryPort.save(account);
 
-        // Registra gasto en la DB
         Transaction expense = new Transaction();
-        expense.setAccount(account);
+        expense.setAccountId(account.getId());
         expense.setTransactionType("EGRESO");
         expense.setAmount(amount);
         expense.setDescription(description);
         expense.setLocation(location);
-        return transactionRepository.save(expense);
+        return transactionRepositoryPort.save(expense);
     }
 
-    // Registrar ingresos
     @Transactional
     public Transaction registerIncome(Account account, BigDecimal amount, String description, String location) {
-        // Sumar dinero
         account.setBalance(account.getBalance().add(amount));
-        accountRepository.save(account);
+        accountRepositoryPort.save(account);
 
-        // Registra ingreso en la DB
         Transaction income = new Transaction();
-        income.setAccount(account);
+        income.setAccountId(account.getId());
         income.setTransactionType("INGRESO");
         income.setAmount(amount);
         income.setDescription(description);
         income.setLocation(location);
-        return transactionRepository.save(income);
+        return transactionRepositoryPort.save(income);
     }
 
     @Transactional
     public void transfer(Account originAccount, Account destinationAccount, BigDecimal amount, String description, String location) {
-        // Verificar fondos en la cuenta origen
         if (originAccount.getBalance().compareTo(amount) < 0) {
             throw new RuntimeException("Saldo insuficiente en la cuenta origen: " + originAccount.getName());
         }
 
-        // Resta en cuenta origen
         originAccount.setBalance(originAccount.getBalance().subtract(amount));
-        accountRepository.save(originAccount);
+        accountRepositoryPort.save(originAccount);
 
-        // Sumar en cuenta destino
         destinationAccount.setBalance(destinationAccount.getBalance().add(amount));
-        accountRepository.save(destinationAccount);
+        accountRepositoryPort.save(destinationAccount);
 
-        // Registrar en historial
         Transaction out = new Transaction();
-        out.setAccount(originAccount);
+        out.setAccountId(originAccount.getId());
         out.setTransactionType("TRANSFERENCIA_SALIDA");
         out.setAmount(amount);
         out.setDescription("A " + destinationAccount.getName() + ": " + description);
         out.setLocation(location);
-        transactionRepository.save(out);
+        transactionRepositoryPort.save(out);
 
         Transaction in = new Transaction();
-        in.setAccount(destinationAccount);
+        in.setAccountId(destinationAccount.getId());
         in.setTransactionType("TRANSFERENCIA_ENTRADA");
         in.setAmount(amount);
         in.setDescription("De " + originAccount.getName() + ": " + description);
         in.setLocation(location);
-        transactionRepository.save(in);
+        transactionRepositoryPort.save(in);
     }
 }

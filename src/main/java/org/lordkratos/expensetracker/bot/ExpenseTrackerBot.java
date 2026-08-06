@@ -1,12 +1,12 @@
 package org.lordkratos.expensetracker.bot;
 
-import org.lordkratos.expensetracker.model.Account;
-import org.lordkratos.expensetracker.model.AppUser;
-import org.lordkratos.expensetracker.model.Loan;
-import org.lordkratos.expensetracker.service.AccountService;
-import org.lordkratos.expensetracker.service.AppUserService;
-import org.lordkratos.expensetracker.service.LoanService;
-import org.lordkratos.expensetracker.service.TransactionService;
+import org.lordkratos.expensetracker.application.usecase.AppUserService;
+import org.lordkratos.expensetracker.domain.model.Account;
+import org.lordkratos.expensetracker.domain.model.AppUser;
+import org.lordkratos.expensetracker.domain.model.Loan;
+import org.lordkratos.expensetracker.application.usecase.AccountService;
+import org.lordkratos.expensetracker.application.usecase.LoanService;
+import org.lordkratos.expensetracker.application.usecase.TransactionService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;

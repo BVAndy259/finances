@@ -1,14 +1,14 @@
-package org.lordkratos.expensetracker.service;
+package org.lordkratos.expensetracker.application.usecase;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.lordkratos.expensetracker.model.Account;
-import org.lordkratos.expensetracker.model.AppUser;
-import org.lordkratos.expensetracker.model.Loan;
-import org.lordkratos.expensetracker.model.Transaction;
-import org.lordkratos.expensetracker.repository.AccountRepository;
-import org.lordkratos.expensetracker.repository.LoanRepository;
-import org.lordkratos.expensetracker.repository.TransactionRepository;
+import org.lordkratos.expensetracker.domain.model.Account;
+import org.lordkratos.expensetracker.domain.model.AppUser;
+import org.lordkratos.expensetracker.domain.model.Loan;
+import org.lordkratos.expensetracker.domain.model.Transaction;
+import org.lordkratos.expensetracker.domain.port.out.AccountRepositoryPort;
+import org.lordkratos.expensetracker.domain.port.out.LoanRepositoryPort;
+import org.lordkratos.expensetracker.domain.port.out.TransactionRepositoryPort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -19,48 +19,40 @@ import java.util.List;
 @RequiredArgsConstructor
 public class LoanService {
 
-    private final LoanRepository loanRepository;
-    private final AccountRepository accountRepository;
-    private final TransactionRepository transactionRepository;
+    private final LoanRepositoryPort loanRepositoryPort;
+    private final AccountRepositoryPort accountRepositoryPort;
+    private final TransactionRepositoryPort transactionRepositoryPort;
 
-    // Prestar Dinero
     @Transactional
     public Loan grantLoan(Account originAccount, BigDecimal amount, String debtorName, String description, LocalDate dueDate) {
-        // Verifica si hay fondos en las cuenta seleccionada
         if (originAccount.getBalance().compareTo(amount) < 0) {
             throw new RuntimeException("Saldo insuficiente en la cuenta: " + originAccount.getName());
         }
 
-        // Restar dinero
         originAccount.setBalance(originAccount.getBalance().subtract(amount));
-        accountRepository.save(originAccount);
+        accountRepositoryPort.save(originAccount);
 
-        // Registrar en historial de Transacciones
         Transaction out = new Transaction();
-        out.setAccount(originAccount);
+        out.setAccountId(originAccount.getId());
         out.setTransactionType("EGRESO_PRESTAMO");
         out.setAmount(amount);
         out.setDescription("Préstamo a " + debtorName + ": " + description);
         out.setLocation("Bot");
-        transactionRepository.save(out);
+        transactionRepositoryPort.save(out);
 
-        // Guardar préstamo
         Loan loan = new Loan();
-        loan.setUser(originAccount.getUser());
-        loan.setAccount(originAccount);
+        loan.setUserId(originAccount.getUserId());
+        loan.setAccountId(originAccount.getId());
         loan.setDebtorName(debtorName);
         loan.setAmount(amount);
         loan.setDueDate(dueDate);
-        return loanRepository.save(loan);
+        return loanRepositoryPort.save(loan);
     }
 
-    // Cobrar Dinero
     @Transactional
     public Loan payLoan(Long loanId, Account destinationAccount, BigDecimal paymentAmount) {
-        // Buscar el prestamo
-        Loan loan = loanRepository.findById(loanId).orElseThrow(() -> new RuntimeException("Préstamo no encontrado"));
+        Loan loan = loanRepositoryPort.findById(loanId).orElseThrow(() -> new RuntimeException("Préstamo no encontrado"));
 
-        // Verifica si el préstamo ya fue pagado
         if (loan.getStatus().equals("PAGADO")) {
             throw new RuntimeException("Este préstam ya fue pagado");
         }
@@ -70,36 +62,31 @@ public class LoanService {
             throw new RuntimeException("El monto a cobrar (S/" + paymentAmount + ") es mayor a la deuda actual (S/" + remaining + ")");
         }
 
-        // Sumar dinero a la cuenta seleccionada
         destinationAccount.setBalance(destinationAccount.getBalance().add(loan.getAmount()));
-        accountRepository.save(destinationAccount);
+        accountRepositoryPort.save(destinationAccount);
 
-        // Registrar en historial de Transacciones
         Transaction in = new Transaction();
-        in.setAccount(destinationAccount);
+        in.setAccountId(destinationAccount.getId());
         in.setTransactionType("INGRESO_COBRO");
         in.setAmount(paymentAmount);
         in.setDescription("Cobro de préstamo a " + loan.getDebtorName());
         in.setLocation("Bot");
-        transactionRepository.save(in);
+        transactionRepositoryPort.save(in);
 
-        // Actualizar la matemática del préstamo
         BigDecimal newPaidAmount = loan.getPaidAmount().add(paymentAmount);
         loan.setPaidAmount(newPaidAmount);
 
-        // Cambiar estado
         if (newPaidAmount.compareTo(loan.getAmount()) >= 0) {
             loan.setStatus("PAGADO");
         } else {
             loan.setStatus("PAGO_PARCIAL");
         }
 
-        return loanRepository.save(loan);
+        return loanRepositoryPort.save(loan);
     }
 
-    // Buscar préstamos pendientes
     public List<Loan> getPendingLoans(AppUser user) {
         List<String> activeStatuses = List.of("PENDIENTE", "PAGO_PARCIAL");
-        return loanRepository.findByUserAndStatusIn(user, activeStatuses);
+        return loanRepositoryPort.findByUserIdAndStatusIn(user.getId(), activeStatuses);
     }
 }

@@ -9,8 +9,8 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class Account {
-
     private Long id;
+    private Long userId;
     private String name;
     private BigDecimal balance = BigDecimal.ZERO;
     private String currency = "PEN";
