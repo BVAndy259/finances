@@ -1,4 +1,4 @@
-package org.lordkratos.expensetracker.model;
+package org.lordkratos.expensetracker.infrastructure.out.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -12,14 +12,14 @@ import java.util.List;
 @Setter
 @Entity
 @Table(name = "account")
-public class Account {
+public class AccountEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private AppUser user;
+    private AppUserEntity user;
 
     @Column(name = "name")
     private String name;
@@ -34,5 +34,5 @@ public class Account {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
-    private List<Transaction> transactions;
+    private List<TransactionEntity> transactions;
 }

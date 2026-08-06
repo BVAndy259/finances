@@ -1,4 +1,4 @@
-package org.lordkratos.expensetracker.model;
+package org.lordkratos.expensetracker.infrastructure.out.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -11,14 +11,14 @@ import java.time.LocalDateTime;
 @Setter
 @Entity
 @Table(name = "transaction")
-public class Transaction {
+public class TransactionEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
     @JoinColumn(name = "account_id", nullable = false)
-    private Account account;
+    private AccountEntity account;
 
     @Column(name = "transaction_type")
     private String transactionType;
