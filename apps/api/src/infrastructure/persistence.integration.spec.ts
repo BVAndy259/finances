@@ -118,7 +118,11 @@ describe('TypeORM persistence integration', () => {
     const loanRepository = new LoanRepositoryAdapter(context, new LoanMapper());
 
     appUserService = new AppUserService(appUserRepository);
-    accountService = new AccountService(accountRepository);
+    accountService = new AccountService(
+      accountRepository,
+      transactionRepository,
+      loanRepository,
+    );
     transactionService = new TransactionService(
       transactionRepository,
       accountRepository,

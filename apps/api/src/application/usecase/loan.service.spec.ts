@@ -47,6 +47,7 @@ describe('LoanService', () => {
       save: jest.fn().mockImplementation((loan: Loan) => Promise.resolve(loan)),
       findById: jest.fn(),
       findByUserIdAndStatusIn: jest.fn(),
+      existsByAccountId: jest.fn(),
     };
     accountRepository = {
       save: jest
@@ -54,14 +55,16 @@ describe('LoanService', () => {
         .mockImplementation((account: Account) => Promise.resolve(account)),
       findById: jest.fn(),
       findByUserId: jest.fn(),
+      delete: jest.fn(),
     };
     transactionRepository = {
       save: jest
         .fn()
         .mockImplementation((transaction: Transaction) =>
-          Promise.resolve({ ...transaction, id: 20 }),
+          Promise.resolve({ ...transaction, id: '20' }),
         ),
       findByAccountId: jest.fn(),
+      existsByAccountId: jest.fn(),
     };
     unitOfWork = {
       run: <T>(work: () => Promise<T>) => work(),
