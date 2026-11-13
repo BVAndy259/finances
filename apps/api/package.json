@@ -42,6 +42,7 @@
   "dependencies": {
     "@expense-tracker/core": "workspace:*",
     "@expense-tracker/database": "workspace:*",
+    "@expense-tracker/shared": "workspace:*",
     "@nestjs/common": "11.2.10",
     "@nestjs/config": "4.0.4",
     "@nestjs/core": "11.2.10",
