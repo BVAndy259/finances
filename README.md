@@ -154,6 +154,8 @@ El flujo de dependencias apunta hacia el dominio: los casos de uso solo conocen 
 
 La migración inicial es idempotente: crea las tablas si no existen y agrega las columnas `paid_amount` y `due_date` si faltan. El esquema refleja el script SQL original, por lo que los campos que permiten `NULL` en la base de datos se mantienen así; los mappers validan los invariantes de negocio al convertir a dominio.
 
+La migración `ConvertIdsToUuid` convierte las claves primarias y foráneas de `bigint` a `uuid` preservando los datos existentes. **Haz un backup antes de ejecutarla**: su `down()` no revierte automáticamente la conversión.
+
 Para verificar diferencias contra una base existente:
 
 ```bash
@@ -189,6 +191,7 @@ El código Java original se conserva temporalmente en `legacy-java/` para compar
 ## Roadmap
 
 - [ ] Frontend Next.js (`apps/web`).
-- [ ] Autenticación JWT y UUID como identificadores.
+- [x] UUID como identificadores.
+- [ ] Autenticación JWT.
 - [ ] Comando `/resumen` para reportes mensuales.
 - [ ] Exportación de datos a Excel mediante `/exportar`.
