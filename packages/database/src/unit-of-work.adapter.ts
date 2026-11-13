@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { DataSource, EntityManager } from 'typeorm';
-import { UnitOfWorkPort } from '../../../../domain/port/out/unit-of-work.port';
+import { UnitOfWorkPort } from '@expense-tracker/core';
 import { TYPEORM_ASYNC_STORAGE } from './typeorm.constants';
 
 @Injectable()

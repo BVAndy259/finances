@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { BusinessRuleError } from '../../../../../domain/errors/business-rule.error';
 import {
+  BusinessRuleError,
   Transaction,
   TransactionType,
-} from '../../../../../domain/model/transaction';
+} from '@expense-tracker/core';
 import { AccountEntity } from '../entities/account.entity';
 import { TransactionEntity } from '../entities/transaction.entity';
 

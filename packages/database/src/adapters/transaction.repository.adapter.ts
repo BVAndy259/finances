@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Transaction } from '../../../../../domain/model/transaction';
-import { TransactionRepositoryPort } from '../../../../../domain/port/out/transaction.repository.port';
+import { Transaction, TransactionRepositoryPort } from '@expense-tracker/core';
 import { AccountEntity } from '../entities/account.entity';
 import { TransactionEntity } from '../entities/transaction.entity';
 import { TransactionMapper } from '../mappers/transaction.mapper';

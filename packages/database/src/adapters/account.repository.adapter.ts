@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Account } from '../../../../../domain/model/account';
-import { AccountRepositoryPort } from '../../../../../domain/port/out/account.repository.port';
+import { Account, AccountRepositoryPort } from '@expense-tracker/core';
 import { AccountEntity } from '../entities/account.entity';
 import { AppUserEntity } from '../entities/app-user.entity';
 import { AccountMapper } from '../mappers/account.mapper';
