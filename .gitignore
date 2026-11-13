@@ -32,3 +32,17 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Node / NestJS ###
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+pnpm-debug.log*
+.pnpm-store/
+
+### Legacy Java (preserved in the legacy/java branch) ###
+legacy-java/
