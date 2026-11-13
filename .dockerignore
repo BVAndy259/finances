@@ -1,0 +1,13 @@
+node_modules
+dist
+coverage
+.git
+.idea
+.vscode
+legacy-java
+.env
+.env.*
+!.env.example
+*.log
+pnpm-debug.log*
+.pnpm-store
