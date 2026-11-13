@@ -36,4 +36,9 @@ export class AccountRepositoryAdapter implements AccountRepositoryPort {
     });
     return entities.map((entity) => this.mapper.toDomain(entity));
   }
+
+  async delete(id: string): Promise<void> {
+    const repository = this.context.manager.getRepository(AccountEntity);
+    await repository.delete(id);
+  }
 }
