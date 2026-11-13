@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ApplicationModule } from './application/application.module';
+import { AuthModule } from './auth.module';
 import configuration from './config/configuration';
 import { validateEnvironment } from './config/env.validation';
 import { BotModule } from './interfaces/bot/bot.module';
@@ -14,6 +15,7 @@ import { PingController } from './interfaces/controllers/ping.controller';
       validate: validateEnvironment,
     }),
     ApplicationModule,
+    AuthModule,
     BotModule,
   ],
   controllers: [PingController],
