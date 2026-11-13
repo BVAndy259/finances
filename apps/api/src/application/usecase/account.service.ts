@@ -1,11 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 import Decimal from 'decimal.js';
-import { Account } from '../../domain/model/account';
-import { AppUser } from '../../domain/model/app-user';
 import {
+  Account,
   ACCOUNT_REPOSITORY,
   AccountRepositoryPort,
-} from '../../domain/port/out/account.repository.port';
+  AppUser,
+} from '@expense-tracker/core';
 
 @Injectable()
 export class AccountService {

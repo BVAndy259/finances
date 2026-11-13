@@ -1,20 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common';
 import Decimal from 'decimal.js';
-import { BusinessRuleError } from '../../domain/errors/business-rule.error';
-import { Account } from '../../domain/model/account';
-import { Transaction } from '../../domain/model/transaction';
 import {
+  Account,
   ACCOUNT_REPOSITORY,
   AccountRepositoryPort,
-} from '../../domain/port/out/account.repository.port';
-import {
+  BusinessRuleError,
+  Transaction,
   TRANSACTION_REPOSITORY,
   TransactionRepositoryPort,
-} from '../../domain/port/out/transaction.repository.port';
-import {
   UNIT_OF_WORK,
   UnitOfWorkPort,
-} from '../../domain/port/out/unit-of-work.port';
+} from '@expense-tracker/core';
 
 @Injectable()
 export class TransactionService {

@@ -3,10 +3,6 @@ export function validateEnvironment(
 ): Record<string, unknown> {
   const missing: string[] = [];
 
-  if (!config.DATABASE_URL) {
-    missing.push('DATABASE_URL');
-  }
-
   const botDisabled =
     String(config.BOT_ENABLED ?? 'true').toLowerCase() === 'false';
 

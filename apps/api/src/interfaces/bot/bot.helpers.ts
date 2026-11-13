@@ -1,5 +1,5 @@
 import Decimal from 'decimal.js';
-import { Account } from '../../domain/model/account';
+import { Account } from '@expense-tracker/core';
 import { BotContext } from './bot.types';
 
 export function getChatId(ctx: BotContext): string | null {

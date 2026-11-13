@@ -20,13 +20,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
-    "typeorm": "typeorm-ts-node-commonjs",
-    "migration:generate": "pnpm typeorm migration:generate -d src/infrastructure/out/persistence/typeorm/data-source.ts",
-    "migration:run": "pnpm typeorm migration:run -d src/infrastructure/out/persistence/typeorm/data-source.ts",
-    "migration:revert": "pnpm typeorm migration:revert -d src/infrastructure/out/persistence/typeorm/data-source.ts",
-    "migration:show": "pnpm typeorm migration:show -d src/infrastructure/out/persistence/typeorm/data-source.ts",
-    "schema:log": "pnpm typeorm schema:log -d src/infrastructure/out/persistence/typeorm/data-source.ts"
+    "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "jest": {
     "moduleFileExtensions": [
@@ -37,7 +31,7 @@
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
+      "^.+\\.ts$": "ts-jest"
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s"
@@ -46,19 +40,17 @@
     "testEnvironment": "node"
   },
   "dependencies": {
+    "@expense-tracker/core": "workspace:*",
+    "@expense-tracker/database": "workspace:*",
     "@nestjs/common": "11.2.10",
     "@nestjs/config": "4.0.4",
     "@nestjs/core": "11.2.10",
     "@nestjs/platform-express": "11.2.10",
-    "@nestjs/typeorm": "11.0.3",
     "date-fns": "^4.4.0",
     "decimal.js": "^10.6.0",
-    "dotenv": "^18.0.10",
     "grammy": "^1.46.0",
-    "pg": "^8.23.1",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2",
-    "typeorm": "^1.1.3"
+    "rxjs": "^7.8.2"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -81,6 +73,7 @@
     "ts-jest": "^29.4.15",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
+    "typeorm": "^1.1.3",
     "typescript": "5.9.3",
     "typescript-eslint": "^8.72.2"
   }

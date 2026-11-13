@@ -1,9 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { AppUser } from '../../domain/model/app-user';
 import {
+  AppUser,
   APP_USER_REPOSITORY,
   AppUserRepositoryPort,
-} from '../../domain/port/out/app-user.repository.port';
+} from '@expense-tracker/core';
 
 @Injectable()
 export class AppUserService {
