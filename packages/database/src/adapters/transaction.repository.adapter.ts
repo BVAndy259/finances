@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import Decimal from 'decimal.js';
 import {
   PaginatedTransactions,
   Transaction,
   TransactionFilters,
   TransactionRepositoryPort,
+  TransactionType,
 } from '@expense-tracker/core';
 import { AccountEntity } from '../entities/account.entity';
 import { TransactionEntity } from '../entities/transaction.entity';
@@ -93,5 +95,30 @@ export class TransactionRepositoryAdapter implements TransactionRepositoryPort {
       where: { account: { id: accountId } },
     });
     return count > 0;
+  }
+
+  async sumByUserIdAndTypes(
+    userId: string,
+    types: TransactionType[],
+    from: Date,
+    to: Date,
+  ): Promise<Decimal> {
+    if (types.length === 0) {
+      return new Decimal(0);
+    }
+
+    const repository = this.context.manager.getRepository(TransactionEntity);
+    const result = await repository
+      .createQueryBuilder('tx')
+      .innerJoin('tx.account', 'account')
+      .innerJoin('account.user', 'user')
+      .select('COALESCE(SUM(tx.amount), 0)', 'total')
+      .where('user.id = :userId', { userId })
+      .andWhere('tx.transactionType IN (:...types)', { types })
+      .andWhere('tx.transactionDate >= :from', { from })
+      .andWhere('tx.transactionDate < :to', { to })
+      .getRawOne<{ total: string | null }>();
+
+    return new Decimal(result?.total ?? 0);
   }
 }
