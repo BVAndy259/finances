@@ -1,70 +1,143 @@
 # Gestor de Finanzas - Telegram Bot
 
-Un bot de Telegram diseñado para el registro y gestión de finanzas personales (gastos, ingresos y préstamos). Construido con una arquitectura robusta orientada a microservicios, desplegado en la nube con contenedores y respaldado por una base de datos relacional.
+Bot de Telegram para el registro y gestión de finanzas personales (gastos, ingresos, transferencias y préstamos). Backend en TypeScript con NestJS y arquitectura hexagonal.
 
-## Tecnologías y Arquitectura
+## Tecnologías
 
-Este proyecto fue desarrollado aplicando patrones de diseño de software y metodologías de integración continua:
+- **Runtime:** Node.js 22+.
+- **Gestor de paquetes:** pnpm 12+.
+- **Framework:** NestJS 11.
+- **Lenguaje:** TypeScript 5.
+- **Persistencia:** TypeORM + PostgreSQL (Supabase).
+- **Bot:** grammY con Long Polling.
+- **Dinero:** `decimal.js` para aritmética decimal exacta.
+- **Testing:** Jest + Supertest.
+- **Contenedores:** Docker multi-stage.
 
-*   **Backend:** Java 21+ con Spring Boot (v4.x).
-*   **Persistencia:** Spring Data JPA (Hibernate) para el mapeo objeto-relacional (ORM).
-*   **Base de Datos:** PostgreSQL alojado en **Supabase** (configurado con *Session Pooler* para optimización de conexiones JDBC).
-*   **API:** Telegram Bots API (Long Polling).
-*   **Contenedorización:** Docker (Dockerfile personalizado de múltiples etapas para compilación y ejecución).
-*   **Despliegue (CI/CD):** Render (Web Service) con despliegue automático desde la rama `master`.
-*   **Utilidades:** Lombok (para reducción de boilerplate con constructores y patrón Builder).
+## Arquitectura hexagonal
 
-## Características Principales (Features)
+```
+src/
+  domain/
+    model/                     # Entidades de dominio (sin dependencias de infraestructura)
+    port/out/                  # Puertos de salida (repositorios, UnitOfWork)
+    errors/
+  application/
+    usecase/                   # Casos de uso (servicios de aplicación)
+  infrastructure/
+    out/persistence/typeorm/   # Adaptadores de salida: entidades, mappers, repositorios, migraciones
+  interfaces/
+    bot/                       # Adaptador de entrada: bot de Telegram y handlers
+    controllers/               # Adaptador de entrada: HTTP (keep-alive)
+```
 
-*   **Gestión Multicuenta:** Soporte para registrar transacciones divididas por cuentas (Ej: Yape, Efectivo, Lemon Cash, Ahorros).
-*   **Registro de Transacciones:** Flujo conversacional en Telegram para ingresar gastos e ingresos indicando monto y concepto.
-*   **Sistema Anti-Suspensión (Keep-Alive):** Endpoint REST interno (`/`) acoplado a un cron-job externo para evitar que el contenedor entre en modo *sleep* en el *free tier* de Render, garantizando disponibilidad 24/7.
-*   **Seguridad:** Uso de variables de entorno para la protección de credenciales (Tokens, Passwords) y gestión de perfiles de Spring (`dev` y `prod`).
+El flujo de dependencias apunta hacia el dominio: los casos de uso solo conocen puertos, y la infraestructura implementa esos puertos con TypeORM.
 
-## Instalación y Configuración Local
+### Equivalencias con la versión Java
 
-Si deseas correr este proyecto en tu entorno de desarrollo local, sigue estos pasos:
+| Java / Spring Boot | TypeScript / NestJS |
+|---|---|
+| `@Service` / `@Component` | `@Injectable()` + módulos de Nest |
+| `JpaRepository` | `Repository<T>` de TypeORM |
+| Entidades JPA + mappers | Entidades TypeORM + mappers |
+| `@Transactional` | Puerto `UnitOfWork` + `DataSource.transaction` |
+| `BigDecimal` | `decimal.js` |
+| `TelegramLongPollingBot` | `grammY` |
+| `@RestController` | `@Controller` |
 
-### Prerequisitos
-*   Java Development Kit (JDK) 21 o superior.
-*   Maven instalado.
-*   Una instancia de PostgreSQL (Local o en Supabase).
-*   Un Token de bot de Telegram (obtenido a través de `@BotFather`).
+## Características
 
-### Configuración del Entorno
+- Gestión multicuenta (Yape, Efectivo, BCP, Ahorros, etc.).
+- Registro conversacional de gastos, ingresos y transferencias.
+- Préstamos con abonos parciales, deuda restante y fecha límite.
+- Reporte de cuentas y saldo total.
+- Endpoint `GET /` para keep-alive en Render.
 
-1. Clona el repositorio:
+## Requisitos
+
+- Node.js 22 o superior.
+- pnpm 12 o superior.
+- PostgreSQL (local o Supabase).
+- Token de bot de Telegram (`@BotFather`).
+
+## Configuración local
+
+1. Instala dependencias:
    ```bash
-   git clone [URL_GitHub]
-   cd finances
+   pnpm install
    ```
-   O puedes hacer un fork a este proyecto para modificarlo o tenerlo en tu propia cuenta.
-2. Configura las variables de entorno para tu perfil de desarrollo. Puedes usar tu terminal (PowerShell o CMD) antes de arrancar la aplicación, o configurar el archivo application-dev.properties (asegúrate de NO subir tus credenciales a GitHub):
-    ```bash
-   spring.profiles.active=dev
-   DB_URL=jdbc:postgresql://localhost:5432/tu_base_de_datos
-   DB_USER=postgres
-   DB_PASSWORD=tu_password
+
+2. Crea un archivo `.env` a partir de `.env.example`:
+   ```env
+   DATABASE_URL=postgresql://user:password@host:5432/database?sslmode=require
    BOT_TOKEN=tu_token_de_telegram
-    ```
-3. Compila y ejecuta el proyecto:
-    ```bash
-    mvn clean package
-    mvn spring-boot:run
-    ```
-   
-## Despliegue en Producción (Render)
-El proyecto está preparado para ser desplegado automáticamente.
-1. Conecta el repositorio a Render creando un nuevo Web Service.
-2. Render detectará automáticamente el Dockerfile.
-3. En la configuración avanzada, define las siguientes Variables de Entorno:
-    - `DB_URL`: URL de tu base de datos PostgreSQL en Supabase.
-    - `DB_USER`: Usuario de la base de datos.
-    - `DB_PASSWORD`: Contraseña de la base de datos.
-    - `BOT_TOKEN`: Token del bot de Telegram
+   TELEGRAM_BOT_USERNAME=kratos_finanzas_bot
+   PORT=8080
+   ```
 
-## Próximos Pasos (Roadmap)
-* [ ] Implementar el comando /resumen para generar reportes mensuales.
-* [ ] Habilitar exportación de datos a Excel (Apache POI) mediante el comando /exportar.
+   `DATABASE_URL` debe ser una URL estándar de PostgreSQL, **no** una URL JDBC. Si apunta a `localhost`, el parámetro `sslmode` se ignora automáticamente para permitir conexiones locales sin SSL.
 
-_Desarrollado aplicando principios de Ingeniería de Software._
+3. Ejecuta las migraciones:
+   ```bash
+   pnpm migration:run
+   ```
+
+4. Arranca en desarrollo:
+   ```bash
+   pnpm start:dev
+   ```
+
+## Scripts
+
+| Comando | Descripción |
+|---|---|
+| `pnpm start:dev` | Servidor en modo watch |
+| `pnpm build` | Compila a `dist/` |
+| `pnpm start:prod` | Ejecuta `dist/main.js` |
+| `pnpm lint` | ESLint con autofix |
+| `pnpm test` | Tests unitarios |
+| `pnpm test:e2e` | Tests e2e |
+| `pnpm migration:generate src/infrastructure/out/persistence/typeorm/migrations/Nombre` | Genera migración |
+| `pnpm migration:run` | Aplica migraciones |
+| `pnpm migration:revert` | Revierte la última migración |
+| `pnpm migration:show` | Muestra el estado de las migraciones |
+| `pnpm schema:log` | Muestra el SQL pendiente entre entidades y BD |
+
+## Migraciones y base de datos existente
+
+La migración inicial es idempotente: crea las tablas si no existen y agrega las columnas `paid_amount` y `due_date` si faltan. El esquema refleja el script SQL original, por lo que los campos que permiten `NULL` en la base de datos se mantienen así; los mappers validan los invariantes de negocio al convertir a dominio.
+
+Para verificar diferencias contra una base existente:
+
+```bash
+pnpm schema:log
+```
+
+## Docker
+
+```bash
+docker build -t expense-tracker .
+docker run --env-file .env -p 8080:8080 expense-tracker
+```
+
+El contenedor aplica las migraciones pendientes antes de arrancar la aplicación.
+
+## Despliegue en Render
+
+1. Conecta el repositorio como Web Service.
+2. Render detectará el `Dockerfile`.
+3. Configura las variables de entorno:
+   - `DATABASE_URL`
+   - `BOT_TOKEN`
+   - `TELEGRAM_BOT_USERNAME` (opcional)
+   - `PORT` (opcional, por defecto `8080`)
+4. El despliegue se ejecuta automáticamente desde la rama configurada.
+
+## Migración desde Java
+
+El código Java original se conserva temporalmente en `legacy-java/` para comparar comportamiento. Se eliminará cuando se valide la paridad funcional completa.
+
+## Roadmap
+
+- [ ] Comando `/resumen` para reportes mensuales.
+- [ ] Exportación de datos a Excel mediante `/exportar`.
