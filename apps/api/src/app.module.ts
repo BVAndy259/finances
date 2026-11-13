@@ -6,6 +6,7 @@ import configuration from './config/configuration';
 import { validateEnvironment } from './config/env.validation';
 import { BotModule } from './interfaces/bot/bot.module';
 import { AccountsController } from './interfaces/controllers/accounts.controller';
+import { DashboardController } from './interfaces/controllers/dashboard.controller';
 import { LoansController } from './interfaces/controllers/loans.controller';
 import { PingController } from './interfaces/controllers/ping.controller';
 import { TransactionsController } from './interfaces/controllers/transactions.controller';
@@ -26,6 +27,7 @@ import { TransactionsController } from './interfaces/controllers/transactions.co
     AccountsController,
     TransactionsController,
     LoansController,
+    DashboardController,
   ],
 })
 export class AppModule {}
