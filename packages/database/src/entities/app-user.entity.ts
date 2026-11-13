@@ -10,10 +10,35 @@ export class AppUserEntity {
     name: 'telegram_chat_id',
     type: 'varchar',
     length: 255,
-    nullable: false,
+    nullable: true,
     unique: true,
   })
-  telegramChatId!: string;
+  telegramChatId!: string | null;
+
+  @Column({
+    name: 'email',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+    unique: true,
+  })
+  email!: string | null;
+
+  @Column({
+    name: 'password_hash',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  passwordHash!: string | null;
+
+  @Column({
+    name: 'refresh_token_hash',
+    type: 'varchar',
+    length: 64,
+    nullable: true,
+  })
+  refreshTokenHash!: string | null;
 
   @Column({ name: 'alias', type: 'varchar', length: 255, nullable: true })
   alias!: string | null;
