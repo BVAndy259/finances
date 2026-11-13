@@ -222,6 +222,12 @@ describe('TypeORM persistence integration', () => {
     expect(pending).toHaveLength(1);
     expect(pending[0].debtorName).toBe('Juan');
 
+    const allLoans = await loanService.listLoans(user);
+    expect(allLoans).toHaveLength(1);
+
+    const fetchedLoan = await loanService.getLoanForUser(user, loan.id!);
+    expect(fetchedLoan.debtorName).toBe('Juan');
+
     const listed = await transactionService.listTransactions(user, {
       page: 1,
       limit: 10,

@@ -1,7 +1,9 @@
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import Decimal from 'decimal.js';
 import {
   Account,
   AccountRepositoryPort,
+  AppUser,
   Loan,
   LoanRepositoryPort,
   Transaction,
@@ -26,6 +28,12 @@ describe('LoanService', () => {
     return account;
   };
 
+  const buildUser = (id = '1'): AppUser => {
+    const user = new AppUser();
+    user.id = id;
+    return user;
+  };
+
   const buildLoan = (
     amount: string,
     paidAmount: string,
@@ -46,6 +54,7 @@ describe('LoanService', () => {
     loanRepository = {
       save: jest.fn().mockImplementation((loan: Loan) => Promise.resolve(loan)),
       findById: jest.fn(),
+      findByUserId: jest.fn(),
       findByUserIdAndStatusIn: jest.fn(),
       existsByAccountId: jest.fn(),
     };
@@ -134,5 +143,74 @@ describe('LoanService', () => {
     await expect(
       service.payLoan('99', buildAccount('0.00'), new Decimal('10.00')),
     ).rejects.toThrow('Préstamo no encontrado');
+  });
+
+  it('lista todos los préstamos o filtra por estado', async () => {
+    loanRepository.findByUserId.mockResolvedValue([buildLoan('100', '0')]);
+    loanRepository.findByUserIdAndStatusIn.mockResolvedValue([
+      buildLoan('100', '50', 'PAGO_PARCIAL'),
+    ]);
+
+    const all = await service.listLoans(buildUser());
+    expect(all).toHaveLength(1);
+    expect(loanRepository.findByUserId).toHaveBeenCalledWith('1');
+
+    const filtered = await service.listLoans(buildUser(), 'PAGO_PARCIAL');
+    expect(filtered).toHaveLength(1);
+    expect(loanRepository.findByUserIdAndStatusIn).toHaveBeenCalledWith('1', [
+      'PAGO_PARCIAL',
+    ]);
+  });
+
+  it('no permite consultar un préstamo de otro usuario', async () => {
+    const loan = buildLoan('100', '0');
+    loan.userId = 'other-user';
+    loanRepository.findById.mockResolvedValue(loan);
+
+    await expect(service.getLoanForUser(buildUser(), '5')).rejects.toThrow(
+      NotFoundException,
+    );
+  });
+
+  it('crea un préstamo validando propiedad y monto', async () => {
+    accountRepository.findById.mockResolvedValue(buildAccount('100.00'));
+    loanRepository.save.mockImplementation((loan: Loan) => {
+      loan.id = '5';
+      return Promise.resolve(loan);
+    });
+
+    const loan = await service.grantLoanForUser(
+      buildUser(),
+      '1',
+      new Decimal('20.00'),
+      'Juan',
+      'Taxi',
+      null,
+    );
+
+    expect(loan.id).toBe('5');
+    expect(accountRepository.findById).toHaveBeenCalledWith('1');
+
+    await expect(
+      service.grantLoanForUser(
+        buildUser(),
+        '1',
+        new Decimal('0'),
+        'Juan',
+        'Taxi',
+        null,
+      ),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('rechaza cobrar el préstamo de otro usuario', async () => {
+    const loan = buildLoan('100', '0');
+    loan.userId = 'other-user';
+    loanRepository.findById.mockResolvedValue(loan);
+    accountRepository.findById.mockResolvedValue(buildAccount('0.00'));
+
+    await expect(
+      service.payLoanForUser(buildUser(), '5', '1', new Decimal('10.00')),
+    ).rejects.toThrow(NotFoundException);
   });
 });

@@ -52,6 +52,7 @@ describe('AccountService', () => {
     loans = {
       save: jest.fn(),
       findById: jest.fn(),
+      findByUserId: jest.fn(),
       findByUserIdAndStatusIn: jest.fn(),
       existsByAccountId: jest.fn(),
     };
