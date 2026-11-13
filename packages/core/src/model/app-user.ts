@@ -1,5 +1,5 @@
 export class AppUser {
-  id?: number;
+  id?: string;
   telegramChatId!: string;
   alias!: string;
   createdAt: Date = new Date();
