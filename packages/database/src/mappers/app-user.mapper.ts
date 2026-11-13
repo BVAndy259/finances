@@ -12,7 +12,7 @@ export class AppUserMapper {
     }
 
     const user = new AppUser();
-    user.id = Number(entity.id);
+    user.id = entity.id;
     user.telegramChatId = entity.telegramChatId;
     user.alias = entity.alias ?? '';
     user.createdAt = entity.createdAt ?? new Date();

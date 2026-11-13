@@ -9,5 +9,6 @@ export default new DataSource({
   entities: typeOrmEntities,
   migrations: [join(__dirname, 'migrations', '*{.ts,.js}')],
   synchronize: false,
+  uuidExtension: 'pgcrypto',
   logging: isDatabaseLoggingEnabled(),
 });

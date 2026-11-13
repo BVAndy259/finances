@@ -11,11 +11,8 @@ import { AccountEntity } from './account.entity';
 
 @Entity('transaction')
 export class TransactionEntity {
-  @PrimaryGeneratedColumn('identity', {
-    type: 'bigint',
-    generatedIdentity: 'BY DEFAULT',
-  })
-  id!: number;
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
 
   @ManyToOne(() => AccountEntity, (account) => account.transactions, {
     nullable: false,

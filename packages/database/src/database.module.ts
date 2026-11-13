@@ -31,6 +31,7 @@ import { TypeOrmUnitOfWork } from './unit-of-work.adapter';
         url: getDatabaseUrl(),
         entities: typeOrmEntities,
         synchronize: false,
+        uuidExtension: 'pgcrypto' as const,
         logging: isDatabaseLoggingEnabled(),
       }),
     }),

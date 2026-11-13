@@ -11,8 +11,8 @@ export class AccountMapper {
     }
 
     const account = new Account();
-    account.id = Number(entity.id);
-    account.userId = Number(entity.user.id);
+    account.id = entity.id;
+    account.userId = entity.user.id;
     account.name = entity.name ?? '';
     account.balance = entity.balance;
     account.currency = entity.currency ?? 'PEN';

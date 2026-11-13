@@ -21,8 +21,8 @@ export class TransactionMapper {
     }
 
     const transaction = new Transaction();
-    transaction.id = Number(entity.id);
-    transaction.accountId = Number(entity.account.id);
+    transaction.id = entity.id;
+    transaction.accountId = entity.account.id;
     transaction.transactionType = entity.transactionType as TransactionType;
     transaction.amount = entity.amount;
     transaction.description = entity.description ?? '';

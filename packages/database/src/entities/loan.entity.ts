@@ -12,11 +12,8 @@ import { AppUserEntity } from './app-user.entity';
 
 @Entity('loan')
 export class LoanEntity {
-  @PrimaryGeneratedColumn('identity', {
-    type: 'bigint',
-    generatedIdentity: 'BY DEFAULT',
-  })
-  id!: number;
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
 
   @ManyToOne(() => AppUserEntity, { nullable: false })
   @JoinColumn({
