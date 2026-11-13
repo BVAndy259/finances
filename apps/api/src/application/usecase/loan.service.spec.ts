@@ -63,7 +63,9 @@ describe('LoanService', () => {
         .mockImplementation((transaction: Transaction) =>
           Promise.resolve({ ...transaction, id: '20' }),
         ),
+      findById: jest.fn(),
       findByAccountId: jest.fn(),
+      findByUserId: jest.fn(),
       existsByAccountId: jest.fn(),
     };
     unitOfWork = {
