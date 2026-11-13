@@ -4,12 +4,14 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import { BusinessRuleExceptionFilter } from './interfaces/filters/business-rule-exception.filter';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
   app.enableShutdownHooks();
   app.use(cookieParser());
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  app.useGlobalFilters(new BusinessRuleExceptionFilter());
 
   const configService = app.get(ConfigService);
   const port = configService.get<number>('port') ?? 8080;
