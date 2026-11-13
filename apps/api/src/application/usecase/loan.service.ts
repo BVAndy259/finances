@@ -65,7 +65,7 @@ export class LoanService {
   }
 
   payLoan(
-    loanId: number,
+    loanId: string,
     destinationAccount: Account,
     paymentAmount: Decimal,
   ): Promise<Loan> {

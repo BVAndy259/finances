@@ -13,7 +13,7 @@ export interface BotSessionData {
   destinationAccount?: string;
   debtor?: string;
   loanDescription?: string;
-  loanId?: number;
+  loanId?: string;
 }
 
 export type BotContext = Context & SessionFlavor<BotSessionData>;
