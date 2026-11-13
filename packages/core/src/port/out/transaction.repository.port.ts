@@ -1,3 +1,4 @@
+import Decimal from 'decimal.js';
 import { Transaction, TransactionType } from '../../model/transaction';
 
 export const TRANSACTION_REPOSITORY = Symbol('TRANSACTION_REPOSITORY');
@@ -25,4 +26,10 @@ export interface TransactionRepositoryPort {
     filters: TransactionFilters,
   ): Promise<PaginatedTransactions>;
   existsByAccountId(accountId: string): Promise<boolean>;
+  sumByUserIdAndTypes(
+    userId: string,
+    types: TransactionType[],
+    from: Date,
+    to: Date,
+  ): Promise<Decimal>;
 }
