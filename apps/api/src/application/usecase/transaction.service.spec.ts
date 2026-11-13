@@ -50,6 +50,7 @@ describe('TransactionService', () => {
       findByAccountId: jest.fn(),
       findByUserId: jest.fn(),
       existsByAccountId: jest.fn(),
+      sumByUserIdAndTypes: jest.fn(),
     };
     unitOfWork = {
       run: <T>(work: () => Promise<T>) => work(),
