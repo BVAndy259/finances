@@ -133,6 +133,16 @@ El flujo de dependencias apunta hacia el dominio: los casos de uso solo conocen 
 
 Las contraseñas se hashean con Argon2. Los access tokens son JWT de corta duración; los refresh tokens se rotan y se almacenan hasheados en la base de datos. El bot de Telegram sigue funcionando con usuarios sin email.
 
+## API de cuentas
+
+Todas las rutas requieren `Authorization: Bearer <accessToken>` y solo operan sobre las cuentas del usuario autenticado.
+
+- `GET /accounts` — lista las cuentas.
+- `POST /accounts` — crea una cuenta (`name`, `currency` opcional, por defecto `PEN`).
+- `GET /accounts/:id` — detalle de una cuenta.
+- `PATCH /accounts/:id` — actualiza `name` y/o `currency`.
+- `DELETE /accounts/:id` — elimina la cuenta si no tiene transacciones ni préstamos asociados.
+
 ## Scripts
 
 ### Raíz (Turborepo)
