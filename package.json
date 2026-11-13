@@ -1,0 +1,23 @@
+{
+  "name": "expense-tracker",
+  "version": "0.0.1",
+  "private": true,
+  "license": "UNLICENSED",
+  "packageManager": "pnpm@12.14.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
+    "typecheck": "turbo run typecheck",
+    "api": "pnpm --filter @expense-tracker/api",
+    "web": "pnpm --filter @expense-tracker/web"
+  },
+  "devDependencies": {
+    "turbo": "^2.11.11"
+  }
+}

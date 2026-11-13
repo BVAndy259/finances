@@ -1,21 +1,22 @@
 {
-  "name": "expense-tracker",
+  "name": "@expense-tracker/api",
   "version": "0.0.1",
   "description": "Expense tracker backend with hexagonal architecture, NestJS and a Telegram bot",
   "private": true,
   "license": "UNLICENSED",
-  "packageManager": "pnpm@12.14.0",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
     "build": "nest build",
+    "dev": "nest start --watch",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,test}/**/*.ts\" --fix",
+    "typecheck": "tsc --noEmit -p tsconfig.build.json",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
@@ -41,7 +42,7 @@
     "collectCoverageFrom": [
       "**/*.(t|j)s"
     ],
-    "coverageDirectory": "../coverage",
+    "coverageDirectory": "coverage",
     "testEnvironment": "node"
   },
   "dependencies": {

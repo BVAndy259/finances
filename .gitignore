@@ -37,6 +37,8 @@ build/
 node_modules/
 dist/
 coverage/
+.turbo/
+.next/
 *.tsbuildinfo
 .env
 .env.*
