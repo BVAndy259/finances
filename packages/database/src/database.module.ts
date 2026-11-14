@@ -5,12 +5,14 @@ import { EntityManager } from 'typeorm';
 import {
   ACCOUNT_REPOSITORY,
   APP_USER_REPOSITORY,
+  DATABASE_HEALTH,
   LOAN_REPOSITORY,
   TRANSACTION_REPOSITORY,
   UNIT_OF_WORK,
 } from '@expense-tracker/core';
 import { AccountRepositoryAdapter } from './adapters/account.repository.adapter';
 import { AppUserRepositoryAdapter } from './adapters/app-user.repository.adapter';
+import { DatabaseHealthAdapter } from './adapters/database-health.adapter';
 import { LoanRepositoryAdapter } from './adapters/loan.repository.adapter';
 import { TransactionRepositoryAdapter } from './adapters/transaction.repository.adapter';
 import { typeOrmEntities } from './entities';
@@ -52,6 +54,7 @@ import { TypeOrmUnitOfWork } from './unit-of-work.adapter';
     AccountRepositoryAdapter,
     TransactionRepositoryAdapter,
     LoanRepositoryAdapter,
+    DatabaseHealthAdapter,
     {
       provide: APP_USER_REPOSITORY,
       useExisting: AppUserRepositoryAdapter,
@@ -72,6 +75,10 @@ import { TypeOrmUnitOfWork } from './unit-of-work.adapter';
       provide: UNIT_OF_WORK,
       useExisting: TypeOrmUnitOfWork,
     },
+    {
+      provide: DATABASE_HEALTH,
+      useExisting: DatabaseHealthAdapter,
+    },
   ],
   exports: [
     APP_USER_REPOSITORY,
@@ -79,6 +86,7 @@ import { TypeOrmUnitOfWork } from './unit-of-work.adapter';
     TRANSACTION_REPOSITORY,
     LOAN_REPOSITORY,
     UNIT_OF_WORK,
+    DATABASE_HEALTH,
   ],
 })
 export class DatabaseModule {}

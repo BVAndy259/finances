@@ -1,5 +1,6 @@
 export * from './adapters/account.repository.adapter';
 export * from './adapters/app-user.repository.adapter';
+export * from './adapters/database-health.adapter';
 export * from './adapters/loan.repository.adapter';
 export * from './adapters/transaction.repository.adapter';
 export * from './database-url';
