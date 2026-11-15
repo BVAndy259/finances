@@ -10,5 +10,6 @@ export default new DataSource({
   entities: typeOrmEntities,
   migrations: [join(__dirname, 'migrations', '*{.ts,.js}')],
   synchronize: false,
+  parseInt8: true,
   logging: process.env.DB_LOGGING === 'true',
 });

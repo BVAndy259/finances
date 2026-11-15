@@ -31,6 +31,7 @@ import { TypeOrmUnitOfWork } from './unit-of-work.adapter';
         url: config.get<string>('databaseUrl'),
         entities: typeOrmEntities,
         synchronize: false,
+        parseInt8: true,
         logging: config.get<string>('databaseLogging') === 'true',
       }),
     }),
