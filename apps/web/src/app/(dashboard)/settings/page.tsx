@@ -1,5 +1,9 @@
 'use client';
 
+import {
+  ChangeEmailForm,
+  ChangePasswordForm,
+} from '@/components/settings/credentials-forms';
 import { useAuth } from '@/lib/auth-context';
 import { formatDate } from '@/lib/format';
 
@@ -29,6 +33,14 @@ export default function SettingsPage() {
           </div>
           <div>
             <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              Telegram
+            </dt>
+            <dd className="mt-1 text-sm text-slate-900">
+              {user?.telegramChatId ? 'Vinculado' : 'No vinculado'}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
               Miembro desde
             </dt>
             <dd className="mt-1 text-sm text-slate-900">
@@ -36,6 +48,11 @@ export default function SettingsPage() {
             </dd>
           </div>
         </dl>
+      </div>
+
+      <div className="mt-6 space-y-4">
+        <ChangeEmailForm />
+        <ChangePasswordForm />
       </div>
     </div>
   );

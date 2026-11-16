@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Inject,
   Injectable,
@@ -6,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
-import { hash, verify } from '@node-rs/argon2';
 import {
   Account,
   ACCOUNT_REPOSITORY,
@@ -18,6 +18,7 @@ import {
   UnitOfWorkPort,
 } from '@expense-tracker/core';
 import { createHash, randomUUID } from 'node:crypto';
+import { PasswordHasher } from '../../infrastructure/security/password-hasher';
 
 export interface RegisterInput {
   email: string;
@@ -29,6 +30,12 @@ export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
   user: AppUser;
+}
+
+export interface UpdateCredentialsInput {
+  currentPassword: string;
+  email?: string;
+  newPassword?: string;
 }
 
 interface RefreshPayload {
@@ -47,6 +54,7 @@ export class AuthService {
     private readonly unitOfWork: UnitOfWorkPort,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly passwordHasher: PasswordHasher,
   ) {}
 
   async register(input: RegisterInput): Promise<AuthTokens> {
@@ -59,7 +67,7 @@ export class AuthService {
 
     const user = new AppUser();
     user.email = email;
-    user.passwordHash = await hash(input.password);
+    user.passwordHash = await this.passwordHasher.hash(input.password);
     user.alias = input.alias?.trim() || email.split('@')[0];
 
     const savedUser = await this.unitOfWork.run(async () => {
@@ -84,12 +92,90 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    const passwordMatches = await verify(user.passwordHash, password).catch(
-      () => false,
+    const passwordMatches = await this.passwordHasher.verify(
+      user.passwordHash,
+      password,
     );
 
     if (!passwordMatches) {
       throw new UnauthorizedException('Credenciales inválidas');
+    }
+
+    if (this.passwordHasher.needsRehash(user.passwordHash)) {
+      user.passwordHash = await this.passwordHasher.hash(password);
+    }
+
+    return this.issueTokens(user);
+  }
+
+  async setInitialCredentials(
+    userId: string,
+    emailInput: string,
+    password: string,
+  ): Promise<AppUser> {
+    this.assertPasswordStrength(password);
+
+    const user = await this.appUserRepository.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('Usuario no encontrado');
+    }
+
+    const email = this.normalizeEmail(emailInput);
+    const emailOwner = await this.appUserRepository.findByEmail(email);
+    if (emailOwner && emailOwner.id !== user.id) {
+      throw new ConflictException('El email ya está registrado');
+    }
+
+    user.email = email;
+    user.passwordHash = await this.passwordHasher.hash(password);
+    user.refreshTokenHash = null;
+
+    return this.appUserRepository.save(user);
+  }
+
+  async updateCredentials(
+    userId: string,
+    input: UpdateCredentialsInput,
+  ): Promise<AuthTokens> {
+    const hasEmail = Boolean(input.email?.trim());
+    const hasPassword = Boolean(input.newPassword);
+
+    if (!hasEmail && !hasPassword) {
+      throw new BadRequestException(
+        'Indica un nuevo email o una nueva contraseña',
+      );
+    }
+
+    const user = await this.appUserRepository.findById(userId);
+    if (!user?.passwordHash) {
+      throw new BadRequestException('No tienes credenciales configuradas');
+    }
+
+    const currentPasswordMatches = await this.passwordHasher.verify(
+      user.passwordHash,
+      input.currentPassword,
+    );
+
+    if (!currentPasswordMatches) {
+      throw new UnauthorizedException('Contraseña actual incorrecta');
+    }
+
+    if (hasEmail) {
+      const email = this.normalizeEmail(input.email!);
+      const emailOwner = await this.appUserRepository.findByEmail(email);
+
+      if (emailOwner && emailOwner.id !== user.id) {
+        throw new ConflictException('El email ya está registrado');
+      }
+
+      user.email = email;
+    }
+
+    if (input.newPassword) {
+      this.assertPasswordStrength(input.newPassword);
+      user.passwordHash = await this.passwordHasher.hash(input.newPassword);
+    } else if (this.passwordHasher.needsRehash(user.passwordHash)) {
+      user.passwordHash = await this.passwordHasher.hash(input.currentPassword);
     }
 
     return this.issueTokens(user);
@@ -177,6 +263,14 @@ export class AuthService {
 
   private normalizeEmail(email: string): string {
     return email.trim().toLowerCase();
+  }
+
+  private assertPasswordStrength(password: string): void {
+    if (password.length < 8) {
+      throw new BadRequestException(
+        'La contraseña debe tener al menos 8 caracteres',
+      );
+    }
   }
 
   private hashToken(token: string): string {

@@ -7,6 +7,7 @@ import { DatabaseModule } from '@expense-tracker/database';
 import { AuthService } from './application/usecase/auth.service';
 import { JwtAuthGuard } from './infrastructure/auth/jwt-auth.guard';
 import { JwtStrategy } from './infrastructure/auth/jwt.strategy';
+import { PasswordHasher } from './infrastructure/security/password-hasher';
 import { AuthController } from './interfaces/controllers/auth.controller';
 
 @Module({
@@ -24,6 +25,7 @@ import { AuthController } from './interfaces/controllers/auth.controller';
   controllers: [AuthController],
   providers: [
     AuthService,
+    PasswordHasher,
     JwtStrategy,
     {
       provide: APP_GUARD,

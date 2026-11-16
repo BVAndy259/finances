@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Patch,
   Post,
   Req,
   Res,
@@ -17,7 +18,12 @@ import {
 } from '../../application/usecase/auth.service';
 import { CurrentUser } from '../../infrastructure/auth/current-user.decorator';
 import { Public } from '../../infrastructure/auth/public.decorator';
-import { LoginDto, RefreshTokenDto, RegisterDto } from './dto/auth.dto';
+import {
+  LoginDto,
+  RefreshTokenDto,
+  RegisterDto,
+  UpdateCredentialsDto,
+} from './dto/auth.dto';
 
 const REFRESH_COOKIE = 'refresh_token';
 const REFRESH_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
@@ -71,6 +77,16 @@ export class AuthController {
       dto.refreshToken ??
       '';
     const tokens = await this.authService.refresh(refreshToken);
+    return this.respondWithTokens(response, tokens);
+  }
+
+  @Patch('credentials')
+  async updateCredentials(
+    @CurrentUser() user: AppUser,
+    @Body() dto: UpdateCredentialsDto,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<{ accessToken: string; user: PublicUser }> {
+    const tokens = await this.authService.updateCredentials(user.id!, dto);
     return this.respondWithTokens(response, tokens);
   }
 

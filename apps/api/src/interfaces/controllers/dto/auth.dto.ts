@@ -33,6 +33,24 @@ export class LoginDto {
   password!: string;
 }
 
+export class UpdateCredentialsDto {
+  @IsString()
+  @MinLength(1)
+  @MaxLength(128)
+  currentPassword!: string;
+
+  @IsOptional()
+  @IsEmail()
+  @MaxLength(255)
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(8)
+  @MaxLength(128)
+  newPassword?: string;
+}
+
 export class RefreshTokenDto {
   @IsOptional()
   @IsString()
