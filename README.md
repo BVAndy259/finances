@@ -206,7 +206,7 @@ Para evitar el spin-down de Render free, configura **cron-job.org** (o similar) 
 
 ## Frontend (`apps/web`)
 
-Next.js 16 (App Router) con Tailwind CSS, TanStack Query, React Hook Form y Zod. La estructura es route-driven: `src/app` para rutas y `src/components` / `src/lib` para UI y lógica compartida.
+Next.js 16 (App Router) con Tailwind CSS, TanStack Query, React Hook Form y Zod. La estructura es route-driven: `src/app` para rutas y `src/components` / `src/lib` para UI y lógica compartida. Se compila como **export estático** (`output: 'export'`) en `apps/web/out` para desplegarse en Cloudflare Pages.
 
 - `/login` y `/register` — autenticación con email/contraseña.
 - `/dashboard` — resumen del mes consumiendo `GET /dashboard/summary`.
@@ -248,8 +248,8 @@ El access token se mantiene en memoria; la sesión se restaura al recargar usand
 | Comando | Descripción |
 |---|---|
 | `pnpm --filter @expense-tracker/web dev` | Next.js en modo desarrollo |
-| `pnpm --filter @expense-tracker/web build` | Build de producción |
-| `pnpm --filter @expense-tracker/web start` | Sirve el build |
+| `pnpm --filter @expense-tracker/web build` | Genera el export estático en `apps/web/out` |
+| `pnpm dlx serve apps/web/out` | Previsualiza el export estático |
 | `pnpm --filter @expense-tracker/web lint` | ESLint |
 | `pnpm --filter @expense-tracker/web typecheck` | TypeScript |
 
@@ -323,14 +323,23 @@ El archivo `render.yaml` incluye una definición opcional del Web Service (Docke
 4. Configura un cron externo (cron-job.org) apuntando a `/health` cada 5–10 minutos.
 5. El despliegue se ejecuta automáticamente desde la rama configurada.
 
-## Despliegue del frontend en Vercel
+## Despliegue del frontend en Cloudflare Pages
 
-El archivo `apps/web/vercel.json` ya define el framework y los comandos de instalación/build para el monorepo.
+El frontend se publica como export estático; no requiere SSR ni Workers.
 
-1. Importa el repositorio en Vercel.
-2. Configura **Root Directory** en `apps/web`.
-3. Variable de entorno: `NEXT_PUBLIC_API_URL=https://tu-api.onrender.com`.
-4. En Render, agrega el dominio de Vercel a `CORS_ORIGINS` y usa `COOKIE_SECURE=true`.
+1. Crea un proyecto en Cloudflare Pages conectado al repositorio.
+2. **Root directory:** raíz del repositorio.
+3. **Install command:** `pnpm install --frozen-lockfile`.
+4. **Build command:** `pnpm turbo run build --filter=@expense-tracker/web`.
+5. **Build output directory:** `apps/web/out`.
+6. Variables de build:
+   - `NEXT_PUBLIC_API_URL=https://tu-api.onrender.com`
+   - `NODE_VERSION=22`
+   - `PNPM_VERSION=12.14.0` si Cloudflare no detecta pnpm.
+7. En Render, agrega `https://<proyecto>.pages.dev` y tu dominio personalizado a `CORS_ORIGINS`.
+8. Mantén `COOKIE_SECURE=true` para las cookies cross-site.
+
+Cada ruta se genera como HTML estático; el acceso a datos y la sesión se resuelven en el navegador contra la API.
 
 ## Checklist antes de mergear a `master`
 
@@ -340,7 +349,7 @@ El archivo `apps/web/vercel.json` ya define el framework y los comandos de insta
 4. Configurar en Render: `DATABASE_URL`, `BOT_TOKEN`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `COOKIE_SECURE=true`, `CORS_ORIGINS`, `BOT_ENABLED`.
 5. Configurar el cron externo apuntando a `/health` cada 5–10 minutos.
 6. Mergear las ramas en orden y verificar `/health` del servicio desplegado.
-7. Desplegar el frontend en Vercel y probar login, dashboard, cuentas, transacciones y préstamos.
+7. Desplegar el frontend en Cloudflare Pages y probar login, dashboard, cuentas, transacciones y préstamos.
 
 ## Migración desde Java
 
