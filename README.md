@@ -153,6 +153,15 @@ Todas las rutas requieren `Authorization: Bearer <accessToken>` y solo operan so
 
 `amount` se envía como string con hasta 2 decimales y debe ser mayor a cero. Todas las operaciones validan que las cuentas pertenezcan al usuario autenticado.
 
+## API de préstamos
+
+- `GET /loans` — lista los préstamos; filtro opcional `status` (`PENDIENTE`, `PAGO_PARCIAL`, `PAGADO`).
+- `POST /loans` — registra un préstamo (`accountId`, `amount`, `debtorName`, `description`, `dueDate` opcional).
+- `GET /loans/:id` — detalle de un préstamo.
+- `POST /loans/:id/payments` — registra un abono (`accountId`, `amount`) y devuelve el préstamo actualizado.
+
+Los préstamos y las cuentas se validan contra el usuario autenticado. Los errores de reglas de negocio (saldo insuficiente, sobrepago, etc.) se responden como `400 Bad Request`.
+
 ## Scripts
 
 ### Raíz (Turborepo)

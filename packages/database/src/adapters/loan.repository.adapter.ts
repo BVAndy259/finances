@@ -33,6 +33,16 @@ export class LoanRepositoryAdapter implements LoanRepositoryPort {
     return entity ? this.mapper.toDomain(entity) : null;
   }
 
+  async findByUserId(userId: string): Promise<Loan[]> {
+    const repository = this.context.manager.getRepository(LoanEntity);
+    const entities = await repository.find({
+      where: { user: { id: userId } },
+      relations: { user: true, account: true },
+      order: { loanDate: 'DESC' },
+    });
+    return entities.map((entity) => this.mapper.toDomain(entity));
+  }
+
   async findByUserIdAndStatusIn(
     userId: string,
     statuses: string[],
