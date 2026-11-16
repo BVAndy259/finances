@@ -41,21 +41,23 @@ export function Modal({ open, title, onClose, children }: ModalProps) {
       <button
         type="button"
         aria-label="Cerrar"
-        className="absolute inset-0 bg-slate-900/40"
+        className="absolute inset-0 bg-slate-900/40 dark:bg-slate-950/70"
         onClick={onClose}
       />
       <div
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="relative w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl"
+        className="relative w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900"
       >
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+            {title}
+          </h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1 text-slate-500 transition hover:bg-slate-100"
+            className="rounded-lg p-1 text-slate-500 transition hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
             aria-label="Cerrar"
           >
             <X className="h-4 w-4" />

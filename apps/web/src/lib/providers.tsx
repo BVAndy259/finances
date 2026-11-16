@@ -7,6 +7,7 @@ import {
 import { useEffect, useState, type ReactNode } from 'react';
 import { getApiUrl } from './api-client';
 import { AuthProvider } from './auth-context';
+import { ThemeSync } from '@/components/theme/theme-sync';
 
 const KEEP_ALIVE_INTERVAL_MS = 10 * 60 * 1000;
 
@@ -53,6 +54,7 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <ThemeSync />
         <KeepAlive />
         {children}
       </AuthProvider>

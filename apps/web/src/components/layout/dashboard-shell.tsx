@@ -15,6 +15,7 @@ import type { ReactNode } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 const NAV_ITEMS: Array<{
   href: string;
@@ -43,16 +44,23 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 md:flex">
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-slate-200 bg-white p-4 md:flex">
-        <div className="mb-8 flex items-center gap-3 px-2">
-          <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-600 text-lg font-bold text-white">
-            F
+    <div className="min-h-screen bg-slate-50 transition-colors dark:bg-slate-950 md:flex">
+      <aside className="hidden w-64 shrink-0 flex-col border-r border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 md:flex">
+        <div className="mb-8 flex items-center justify-between gap-3 px-2">
+          <div className="flex items-center gap-3">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-600 text-lg font-bold text-white">
+              F
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                Finanzas
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Gestor personal
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-semibold text-slate-900">Finanzas</p>
-            <p className="text-xs text-slate-500">Gestor personal</p>
-          </div>
+          <ThemeToggle className="-mr-2" />
         </div>
 
         <nav className="space-y-1">
@@ -67,8 +75,8 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                 className={cn(
                   'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                   active
-                    ? 'bg-emerald-50 text-emerald-700'
-                    : 'text-slate-600 hover:bg-slate-100',
+                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400'
+                    : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800',
                 )}
               >
                 <Icon className="h-4 w-4" />
@@ -78,11 +86,13 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           })}
         </nav>
 
-        <div className="mt-auto rounded-xl bg-slate-50 p-3">
-          <p className="truncate text-sm font-medium text-slate-900">
+        <div className="mt-auto rounded-xl bg-slate-50 p-3 dark:bg-slate-800/60">
+          <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
             {user?.alias}
           </p>
-          <p className="truncate text-xs text-slate-500">{user?.email}</p>
+          <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+            {user?.email}
+          </p>
           <Button
             variant="ghost"
             className="mt-2 w-full justify-start px-2"
@@ -95,24 +105,29 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="flex min-h-screen flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 md:hidden">
+        <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900 md:hidden">
           <div className="flex items-center gap-2">
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-emerald-600 text-sm font-bold text-white">
               F
             </div>
-            <span className="text-sm font-semibold text-slate-900">Finanzas</span>
+            <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              Finanzas
+            </span>
           </div>
-          <Button
-            variant="ghost"
-            className="px-2"
-            onClick={handleLogout}
-            aria-label="Cerrar sesión"
-          >
-            <LogOut className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+            <Button
+              variant="ghost"
+              className="px-2"
+              onClick={handleLogout}
+              aria-label="Cerrar sesión"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
         </header>
 
-        <nav className="flex gap-1 overflow-x-auto border-b border-slate-200 bg-white px-2 py-2 md:hidden">
+        <nav className="flex gap-1 overflow-x-auto border-b border-slate-200 bg-white px-2 py-2 dark:border-slate-800 dark:bg-slate-900 md:hidden">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const active = isActive(pathname, item.href);
@@ -124,8 +139,8 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                 className={cn(
                   'flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium',
                   active
-                    ? 'bg-emerald-50 text-emerald-700'
-                    : 'text-slate-600 hover:bg-slate-100',
+                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400'
+                    : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800',
                 )}
               >
                 <Icon className="h-4 w-4" />

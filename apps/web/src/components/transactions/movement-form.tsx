@@ -77,7 +77,7 @@ export function MovementForm({
       <div>
         <label
           htmlFor={`${kind}-account`}
-          className="mb-1 block text-sm font-medium text-slate-700"
+          className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
         >
           Cuenta
         </label>
@@ -89,7 +89,7 @@ export function MovementForm({
           ))}
         </Select>
         {errors.accountId && (
-          <p className="mt-1 text-xs text-red-600">
+          <p className="mt-1 text-xs text-red-600 dark:text-red-400">
             {errors.accountId.message}
           </p>
         )}
@@ -98,7 +98,7 @@ export function MovementForm({
       <div>
         <label
           htmlFor={`${kind}-amount`}
-          className="mb-1 block text-sm font-medium text-slate-700"
+          className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
         >
           Monto
         </label>
@@ -109,14 +109,14 @@ export function MovementForm({
           {...register('amount')}
         />
         {errors.amount && (
-          <p className="mt-1 text-xs text-red-600">{errors.amount.message}</p>
+          <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.amount.message}</p>
         )}
       </div>
 
       <div>
         <label
           htmlFor={`${kind}-description`}
-          className="mb-1 block text-sm font-medium text-slate-700"
+          className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
         >
           Descripción
         </label>
@@ -126,7 +126,7 @@ export function MovementForm({
           {...register('description')}
         />
         {errors.description && (
-          <p className="mt-1 text-xs text-red-600">
+          <p className="mt-1 text-xs text-red-600 dark:text-red-400">
             {errors.description.message}
           </p>
         )}
@@ -135,9 +135,9 @@ export function MovementForm({
       <div>
         <label
           htmlFor={`${kind}-location`}
-          className="mb-1 block text-sm font-medium text-slate-700"
+          className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
         >
-          Ubicación <span className="text-slate-400">(opcional)</span>
+          Ubicación <span className="text-slate-400 dark:text-slate-500">(opcional)</span>
         </label>
         <Input
           id={`${kind}-location`}
@@ -145,14 +145,14 @@ export function MovementForm({
           {...register('location')}
         />
         {errors.location && (
-          <p className="mt-1 text-xs text-red-600">
+          <p className="mt-1 text-xs text-red-600 dark:text-red-400">
             {errors.location.message}
           </p>
         )}
       </div>
 
       {serverError && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
           {serverError}
         </p>
       )}

@@ -5,11 +5,12 @@ type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
 const VARIANTS: Record<Variant, string> = {
   primary:
-    'bg-emerald-600 text-white hover:bg-emerald-700 focus-visible:outline-emerald-600',
+    'bg-emerald-600 text-white hover:bg-emerald-700 focus-visible:outline-emerald-600 dark:hover:bg-emerald-500',
   secondary:
-    'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50',
-  ghost: 'text-slate-600 hover:bg-slate-100',
-  danger: 'bg-red-600 text-white hover:bg-red-700',
+    'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800',
+  ghost:
+    'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800',
+  danger: 'bg-red-600 text-white hover:bg-red-700 dark:hover:bg-red-500',
 };
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

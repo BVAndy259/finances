@@ -139,10 +139,10 @@ export default function TransactionsPage() {
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
             Transacciones
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Historial de gastos, ingresos y transferencias.
           </p>
         </div>
@@ -174,7 +174,7 @@ export default function TransactionsPage() {
       </header>
 
       {accountsList.length === 0 && (
-        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <p className="rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/40 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
           Necesitas al menos una cuenta para registrar movimientos.{' '}
           <Link href="/accounts" className="font-medium underline">
             Crea una cuenta
@@ -183,12 +183,12 @@ export default function TransactionsPage() {
         </p>
       )}
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 p-4 shadow-sm">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <div>
             <label
               htmlFor="filter-account"
-              className="mb-1 block text-xs font-medium text-slate-500"
+              className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400"
             >
               Cuenta
             </label>
@@ -212,7 +212,7 @@ export default function TransactionsPage() {
           <div>
             <label
               htmlFor="filter-type"
-              className="mb-1 block text-xs font-medium text-slate-500"
+              className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400"
             >
               Tipo
             </label>
@@ -236,7 +236,7 @@ export default function TransactionsPage() {
           <div>
             <label
               htmlFor="filter-from"
-              className="mb-1 block text-xs font-medium text-slate-500"
+              className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400"
             >
               Desde
             </label>
@@ -254,7 +254,7 @@ export default function TransactionsPage() {
           <div>
             <label
               htmlFor="filter-to"
-              className="mb-1 block text-xs font-medium text-slate-500"
+              className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400"
             >
               Hasta
             </label>
@@ -281,22 +281,22 @@ export default function TransactionsPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 p-5 shadow-sm">
         {isLoading ? (
           <div className="space-y-3">
             {Array.from({ length: 6 }).map((_, index) => (
               <div
                 key={index}
-                className="h-12 animate-pulse rounded-lg bg-slate-100"
+                className="h-12 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800"
               />
             ))}
           </div>
         ) : isError || !data ? (
           <div>
-            <p className="text-sm font-semibold text-red-800">
+            <p className="text-sm font-semibold text-red-800 dark:text-red-300">
               No se pudieron cargar las transacciones
             </p>
-            <p className="mt-1 text-sm text-red-700">
+            <p className="mt-1 text-sm text-red-700 dark:text-red-300">
               {getErrorMessage(error)}
             </p>
             <Button
@@ -308,12 +308,12 @@ export default function TransactionsPage() {
             </Button>
           </div>
         ) : data.items.length === 0 ? (
-          <p className="py-8 text-center text-sm text-slate-500">
+          <p className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
             No hay transacciones para los filtros seleccionados.
           </p>
         ) : (
           <>
-            <ul className="divide-y divide-slate-100">
+            <ul className="divide-y divide-slate-100 dark:divide-slate-800">
               {data.items.map((transaction) => {
                 const positive = INCOME_TYPES.has(
                   transaction.transactionType,
@@ -325,10 +325,10 @@ export default function TransactionsPage() {
                     className="flex items-center justify-between gap-3 py-3"
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-slate-900">
+                      <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
                         {transaction.description}
                       </p>
-                      <p className="truncate text-xs text-slate-500">
+                      <p className="truncate text-xs text-slate-500 dark:text-slate-400">
                         {transactionLabel(transaction.transactionType)} ·{' '}
                         {accountNames.get(transaction.accountId) ?? 'Cuenta'} ·{' '}
                         {formatDate(transaction.transactionDate)}
@@ -339,7 +339,7 @@ export default function TransactionsPage() {
                     </div>
                     <span
                       className={`shrink-0 text-sm font-semibold ${
-                        positive ? 'text-emerald-600' : 'text-red-600'
+                        positive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
                       }`}
                     >
                       {positive ? '+' : '-'}
@@ -353,8 +353,8 @@ export default function TransactionsPage() {
               })}
             </ul>
 
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
-              <p className="text-xs text-slate-500">
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-800 pt-4">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 {total} {total === 1 ? 'movimiento' : 'movimientos'} · página{' '}
                 {page} de {totalPages}
               </p>

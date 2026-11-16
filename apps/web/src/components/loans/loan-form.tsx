@@ -81,7 +81,7 @@ export function LoanForm({ accounts, onSubmit, onCancel }: LoanFormProps) {
       <div>
         <label
           htmlFor="loan-account"
-          className="mb-1 block text-sm font-medium text-slate-700"
+          className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
         >
           Cuenta de origen
         </label>
@@ -93,7 +93,7 @@ export function LoanForm({ accounts, onSubmit, onCancel }: LoanFormProps) {
           ))}
         </Select>
         {errors.accountId && (
-          <p className="mt-1 text-xs text-red-600">
+          <p className="mt-1 text-xs text-red-600 dark:text-red-400">
             {errors.accountId.message}
           </p>
         )}
@@ -102,7 +102,7 @@ export function LoanForm({ accounts, onSubmit, onCancel }: LoanFormProps) {
       <div>
         <label
           htmlFor="loan-amount"
-          className="mb-1 block text-sm font-medium text-slate-700"
+          className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
         >
           Monto
         </label>
@@ -113,14 +113,14 @@ export function LoanForm({ accounts, onSubmit, onCancel }: LoanFormProps) {
           {...register('amount')}
         />
         {errors.amount && (
-          <p className="mt-1 text-xs text-red-600">{errors.amount.message}</p>
+          <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.amount.message}</p>
         )}
       </div>
 
       <div>
         <label
           htmlFor="loan-debtor"
-          className="mb-1 block text-sm font-medium text-slate-700"
+          className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
         >
           Deudor
         </label>
@@ -130,7 +130,7 @@ export function LoanForm({ accounts, onSubmit, onCancel }: LoanFormProps) {
           {...register('debtorName')}
         />
         {errors.debtorName && (
-          <p className="mt-1 text-xs text-red-600">
+          <p className="mt-1 text-xs text-red-600 dark:text-red-400">
             {errors.debtorName.message}
           </p>
         )}
@@ -139,7 +139,7 @@ export function LoanForm({ accounts, onSubmit, onCancel }: LoanFormProps) {
       <div>
         <label
           htmlFor="loan-description"
-          className="mb-1 block text-sm font-medium text-slate-700"
+          className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
         >
           Motivo
         </label>
@@ -149,7 +149,7 @@ export function LoanForm({ accounts, onSubmit, onCancel }: LoanFormProps) {
           {...register('description')}
         />
         {errors.description && (
-          <p className="mt-1 text-xs text-red-600">
+          <p className="mt-1 text-xs text-red-600 dark:text-red-400">
             {errors.description.message}
           </p>
         )}
@@ -158,18 +158,18 @@ export function LoanForm({ accounts, onSubmit, onCancel }: LoanFormProps) {
       <div>
         <label
           htmlFor="loan-due-date"
-          className="mb-1 block text-sm font-medium text-slate-700"
+          className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
         >
-          Fecha límite <span className="text-slate-400">(opcional)</span>
+          Fecha límite <span className="text-slate-400 dark:text-slate-500">(opcional)</span>
         </label>
         <Input id="loan-due-date" type="date" {...register('dueDate')} />
         {errors.dueDate && (
-          <p className="mt-1 text-xs text-red-600">{errors.dueDate.message}</p>
+          <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.dueDate.message}</p>
         )}
       </div>
 
       {serverError && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
           {serverError}
         </p>
       )}
