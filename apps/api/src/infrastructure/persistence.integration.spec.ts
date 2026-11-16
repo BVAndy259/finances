@@ -221,5 +221,18 @@ describe('TypeORM persistence integration', () => {
     const pending = await loanService.getPendingLoans(user);
     expect(pending).toHaveLength(1);
     expect(pending[0].debtorName).toBe('Juan');
+
+    const listed = await transactionService.listTransactions(user, {
+      page: 1,
+      limit: 10,
+    });
+    expect(listed.total).toBeGreaterThan(0);
+    expect(listed.items).toHaveLength(listed.total);
+
+    const fetched = await transactionService.getTransactionForUser(
+      user,
+      listed.items[0].id!,
+    );
+    expect(fetched.id).toBe(listed.items[0].id);
   });
 });

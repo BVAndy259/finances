@@ -143,6 +143,16 @@ Todas las rutas requieren `Authorization: Bearer <accessToken>` y solo operan so
 - `PATCH /accounts/:id` — actualiza `name` y/o `currency`.
 - `DELETE /accounts/:id` — elimina la cuenta si no tiene transacciones ni préstamos asociados.
 
+## API de transacciones
+
+- `GET /transactions` — lista paginada con filtros `accountId`, `type`, `from`, `to`, `page`, `limit`.
+- `POST /transactions/expense` — registra un egreso (`accountId`, `amount`, `description`, `location` opcional).
+- `POST /transactions/income` — registra un ingreso con el mismo cuerpo.
+- `POST /transactions/transfer` — transfiere entre cuentas propias (`originAccountId`, `destinationAccountId`, `amount`, `description`).
+- `GET /transactions/:id` — detalle de una transacción.
+
+`amount` se envía como string con hasta 2 decimales y debe ser mayor a cero. Todas las operaciones validan que las cuentas pertenezcan al usuario autenticado.
+
 ## Scripts
 
 ### Raíz (Turborepo)

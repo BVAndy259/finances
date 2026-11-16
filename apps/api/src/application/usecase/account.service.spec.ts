@@ -43,7 +43,9 @@ describe('AccountService', () => {
 
     transactions = {
       save: jest.fn(),
+      findById: jest.fn(),
       findByAccountId: jest.fn(),
+      findByUserId: jest.fn(),
       existsByAccountId: jest.fn(),
     };
 

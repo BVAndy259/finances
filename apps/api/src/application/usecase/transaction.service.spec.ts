@@ -1,7 +1,9 @@
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import Decimal from 'decimal.js';
 import {
   Account,
   AccountRepositoryPort,
+  AppUser,
   Transaction,
   TransactionRepositoryPort,
   UnitOfWorkPort,
@@ -23,6 +25,12 @@ describe('TransactionService', () => {
     return account;
   };
 
+  const buildUser = (id = '1'): AppUser => {
+    const user = new AppUser();
+    user.id = id;
+    return user;
+  };
+
   beforeEach(() => {
     accountRepository = {
       save: jest
@@ -38,7 +46,9 @@ describe('TransactionService', () => {
         .mockImplementation((transaction: Transaction) =>
           Promise.resolve({ ...transaction, id: '10' }),
         ),
+      findById: jest.fn(),
       findByAccountId: jest.fn(),
+      findByUserId: jest.fn(),
       existsByAccountId: jest.fn(),
     };
     unitOfWork = {
@@ -130,5 +140,105 @@ describe('TransactionService', () => {
     ).rejects.toThrow('Saldo insuficiente en la cuenta origen: Yape');
 
     expect(transactionRepository.save).not.toHaveBeenCalled();
+  });
+
+  it('registra un gasto validando la propiedad de la cuenta', async () => {
+    accountRepository.findById.mockResolvedValue(buildAccount('100.00'));
+
+    const transaction = await service.registerExpenseForUser(
+      buildUser(),
+      '1',
+      new Decimal('25.00'),
+      'Almuerzo',
+      'Web',
+    );
+
+    expect(accountRepository.findById).toHaveBeenCalledWith('1');
+    expect(transaction.transactionType).toBe('EGRESO');
+  });
+
+  it('rechaza montos no positivos', async () => {
+    await expect(
+      service.registerExpenseForUser(
+        buildUser(),
+        '1',
+        new Decimal('0'),
+        'Almuerzo',
+        'Web',
+      ),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('rechaza movimientos sobre cuentas de otro usuario', async () => {
+    const account = buildAccount('100.00');
+    account.userId = 'other-user';
+    accountRepository.findById.mockResolvedValue(account);
+
+    await expect(
+      service.registerIncomeForUser(
+        buildUser(),
+        '1',
+        new Decimal('10.00'),
+        'Sueldo',
+        'Web',
+      ),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('rechaza transferencias entre la misma cuenta', async () => {
+    await expect(
+      service.transferForUser(
+        buildUser(),
+        '1',
+        '1',
+        new Decimal('10.00'),
+        'Ahorro',
+        'Web',
+      ),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('lista transacciones con filtros y valida el rango de fechas', async () => {
+    transactionRepository.findByUserId.mockResolvedValue({
+      items: [],
+      total: 0,
+    });
+
+    const filters = { page: 1, limit: 20 };
+    const result = await service.listTransactions(buildUser(), filters);
+
+    expect(transactionRepository.findByUserId).toHaveBeenCalledWith(
+      '1',
+      filters,
+    );
+    expect(result.total).toBe(0);
+
+    await expect(
+      service.listTransactions(buildUser(), {
+        from: new Date('2026-02-01'),
+        to: new Date('2026-01-01'),
+        page: 1,
+        limit: 20,
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('rechaza consultar una transacción de otro usuario', async () => {
+    transactionRepository.findById.mockResolvedValue({
+      id: 'tx-1',
+      accountId: '1',
+      transactionType: 'EGRESO',
+      amount: new Decimal('10.00'),
+      description: 'Cena',
+      location: 'Web',
+      transactionDate: new Date(),
+    });
+    const account = buildAccount('100.00');
+    account.userId = 'other-user';
+    accountRepository.findById.mockResolvedValue(account);
+
+    await expect(
+      service.getTransactionForUser(buildUser(), 'tx-1'),
+    ).rejects.toThrow(NotFoundException);
   });
 });
