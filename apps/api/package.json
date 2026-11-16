@@ -17,6 +17,7 @@
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,test}/**/*.ts\" --fix",
     "typecheck": "tsc --noEmit -p tsconfig.build.json",
+    "auth:set-credentials": "ts-node --transpile-only src/scripts/set-credentials.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
