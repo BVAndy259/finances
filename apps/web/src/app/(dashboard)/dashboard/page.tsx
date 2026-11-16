@@ -216,7 +216,7 @@ export default function DashboardPage() {
                       {account.name}
                     </span>
                     <span className="text-sm font-semibold text-slate-900">
-                      {formatCurrency(account.balance)}
+                      {formatCurrency(account.balance, account.currency)}
                     </span>
                   </li>
                 ))}

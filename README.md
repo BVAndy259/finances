@@ -192,7 +192,8 @@ Next.js 16 (App Router) con Tailwind CSS, TanStack Query, React Hook Form y Zod.
 
 - `/login` y `/register` — autenticación con email/contraseña.
 - `/dashboard` — resumen del mes consumiendo `GET /dashboard/summary`.
-- `/accounts`, `/transactions`, `/loans` — placeholders para las siguientes iteraciones.
+- `/accounts` — CRUD de cuentas con validación de errores de la API.
+- `/transactions`, `/loans` — placeholders para las siguientes iteraciones.
 - `/settings` — perfil del usuario autenticado.
 
 El access token se mantiene en memoria; la sesión se restaura al recargar usando el refresh token en cookie `httpOnly`. El cliente reintenta una vez tras un `401` renovando el token. Además, mientras la app está abierta se llama a `/health` cada 10 minutos para complementar el cron externo.
@@ -295,7 +296,8 @@ El código Java original se conserva temporalmente en `legacy-java/` para compar
 ## Roadmap
 
 - [x] Base del frontend Next.js (auth, dashboard y keep-alive).
-- [ ] Páginas de cuentas, transacciones, préstamos y ajustes.
+- [x] Página de cuentas (CRUD).
+- [ ] Páginas de transacciones, préstamos y ajustes.
 - [x] UUID como identificadores.
 - [x] Autenticación JWT con refresh tokens.
 - [ ] Comando `/resumen` para reportes mensuales.

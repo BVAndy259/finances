@@ -1,11 +1,19 @@
-export function formatCurrency(value: string | number): string {
+export function formatCurrency(
+  value: string | number,
+  currency = 'PEN',
+): string {
   const amount = typeof value === 'string' ? Number(value) : value;
+  const safeAmount = Number.isFinite(amount) ? amount : 0;
 
-  return new Intl.NumberFormat('es-PE', {
-    style: 'currency',
-    currency: 'PEN',
-    minimumFractionDigits: 2,
-  }).format(Number.isFinite(amount) ? amount : 0);
+  try {
+    return new Intl.NumberFormat('es-PE', {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: 2,
+    }).format(safeAmount);
+  } catch {
+    return `${currency} ${safeAmount.toFixed(2)}`;
+  }
 }
 
 export function formatDate(value: string | Date): string {
