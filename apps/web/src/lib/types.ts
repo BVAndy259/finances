@@ -84,8 +84,9 @@ export interface TransactionFilters {
   limit: number;
 }
 
-export interface LoanSummary {
+export interface Loan {
   id?: string;
+  userId: string;
   accountId: string;
   debtorName: string;
   amount: string;
@@ -94,6 +95,19 @@ export interface LoanSummary {
   dueDate: string | null;
   status: string;
   loanDate: string;
+}
+
+export interface LoanInput {
+  accountId: string;
+  amount: string;
+  debtorName: string;
+  description: string;
+  dueDate?: string;
+}
+
+export interface LoanPaymentInput {
+  accountId: string;
+  amount: string;
 }
 
 export interface DashboardSummary {
@@ -107,6 +121,6 @@ export interface DashboardSummary {
   loans: {
     total: string;
     count: number;
-    items: LoanSummary[];
+    items: Loan[];
   };
 }
