@@ -26,6 +26,20 @@ export function formatDate(value: string | Date): string {
   }).format(date);
 }
 
+export function formatDateOnly(value: string): string {
+  const [year, month, day] = value.split('-').map(Number);
+
+  if (!year || !month || !day) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat('es-PE', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(year, month - 1, day));
+}
+
 export function formatMonth(value: string): string {
   const [year, month] = value.split('-').map(Number);
   const date = new Date(Date.UTC(year, month - 1, 1));
