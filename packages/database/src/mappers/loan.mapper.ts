@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import Decimal from 'decimal.js';
-import { BusinessRuleError } from '../../../../../domain/errors/business-rule.error';
-import { Loan, LoanStatus } from '../../../../../domain/model/loan';
+import {
+  BusinessRuleError,
+  Loan,
+  LoanStatus,
+} from '@expense-tracker/core';
 import { AccountEntity } from '../entities/account.entity';
 import { AppUserEntity } from '../entities/app-user.entity';
 import { LoanEntity } from '../entities/loan.entity';

@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AccountService } from '../../application/usecase/account.service';
 import { AppUserService } from '../../application/usecase/app-user.service';
-import { Account } from '../../domain/model/account';
-import { AppUser } from '../../domain/model/app-user';
+import { Account, AppUser } from '@expense-tracker/core';
 import { getChatId, resetSession } from './bot.helpers';
 import { BotContext } from './bot.types';
 

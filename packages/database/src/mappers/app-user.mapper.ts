@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { BusinessRuleError } from '../../../../../domain/errors/business-rule.error';
-import { AppUser } from '../../../../../domain/model/app-user';
+import { AppUser, BusinessRuleError } from '@expense-tracker/core';
 import { AppUserEntity } from '../entities/app-user.entity';
 
 @Injectable()

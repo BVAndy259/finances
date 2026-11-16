@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { format, isMatch, parse } from 'date-fns';
 import Decimal from 'decimal.js';
 import { LoanService } from '../../../application/usecase/loan.service';
-import { Loan } from '../../../domain/model/loan';
+import { Loan } from '@expense-tracker/core';
 import {
   formatAmount,
   getErrorMessage,

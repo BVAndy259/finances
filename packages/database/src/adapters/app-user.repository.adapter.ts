@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AppUser } from '../../../../../domain/model/app-user';
-import { AppUserRepositoryPort } from '../../../../../domain/port/out/app-user.repository.port';
+import { AppUser, AppUserRepositoryPort } from '@expense-tracker/core';
 import { AppUserEntity } from '../entities/app-user.entity';
 import { AppUserMapper } from '../mappers/app-user.mapper';
 import { TypeOrmContext } from '../typeorm-context';

@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { In } from 'typeorm';
-import { Loan } from '../../../../../domain/model/loan';
-import { LoanRepositoryPort } from '../../../../../domain/port/out/loan.repository.port';
+import { Loan, LoanRepositoryPort } from '@expense-tracker/core';
 import { AccountEntity } from '../entities/account.entity';
 import { AppUserEntity } from '../entities/app-user.entity';
 import { LoanEntity } from '../entities/loan.entity';

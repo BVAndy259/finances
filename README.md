@@ -6,14 +6,18 @@ Monorepo con Turborepo para el registro y gestión de finanzas personales (gasto
 
 ```
 apps/
-  api/                 # Backend NestJS + bot de Telegram
+  api/                 # Backend NestJS + bot de Telegram (casos de uso e interfaces)
   web/                 # Frontend Next.js (pendiente)
 packages/
+  core/                # Dominio: modelos, puertos y errores
+  database/            # Persistencia TypeORM: entidades, mappers, adapters, migraciones y DataSource
   shared/              # Tipos y utilidades compartidas
 turbo.json
 pnpm-workspace.yaml
 Dockerfile             # Imagen del backend (contexto: raíz del repo)
 ```
+
+Grafo de dependencias: `shared` → `core` → `database` → `api`. El paquete `database` implementa los puertos definidos en `core`; `apps/api` solo orquesta casos de uso e interfaces.
 
 ## Tecnologías
 
@@ -28,18 +32,22 @@ Dockerfile             # Imagen del backend (contexto: raíz del repo)
 - **Testing:** Jest + Supertest.
 - **Contenedores:** Docker multi-stage.
 
-## Arquitectura hexagonal (apps/api)
+## Arquitectura hexagonal
 
 ```
+packages/core/src/
+  model/                       # Entidades de dominio (sin dependencias de infraestructura)
+  port/out/                    # Puertos de salida (repositorios, UnitOfWork)
+  errors/
+packages/database/src/
+  entities/                    # Entidades TypeORM
+  mappers/                     # Conversión dominio ↔ persistencia
+  adapters/                    # Implementación de los puertos
+  migrations/                  # Migraciones
+  data-source.ts               # DataSource para el CLI de TypeORM
 apps/api/src/
-  domain/
-    model/                     # Entidades de dominio (sin dependencias de infraestructura)
-    port/out/                  # Puertos de salida (repositorios, UnitOfWork)
-    errors/
   application/
     usecase/                   # Casos de uso (servicios de aplicación)
-  infrastructure/
-    out/persistence/typeorm/   # Adaptadores de salida: entidades, mappers, repositorios, migraciones
   interfaces/
     bot/                       # Adaptador de entrada: bot de Telegram y handlers
     controllers/               # Adaptador de entrada: HTTP (keep-alive)
@@ -81,19 +89,27 @@ El flujo de dependencias apunta hacia el dominio: los casos de uso solo conocen 
    pnpm install
    ```
 
-2. Crea `apps/api/.env` a partir de `apps/api/.env.example`:
+2. Crea un `.env` por paquete a partir de su `.env.example`:
+
+   `apps/api/.env`:
    ```env
-   DATABASE_URL=postgresql://user:password@host:5432/database?sslmode=require
    BOT_TOKEN=tu_token_de_telegram
    TELEGRAM_BOT_USERNAME=kratos_finanzas_bot
+   BOT_ENABLED=true
    PORT=8080
    ```
 
-   `DATABASE_URL` debe ser una URL estándar de PostgreSQL, **no** una URL JDBC. Si apunta a `localhost`, el parámetro `sslmode` se ignora automáticamente para permitir conexiones locales sin SSL.
+   `packages/database/.env`:
+   ```env
+   DATABASE_URL=postgresql://user:password@host:5432/database?sslmode=require
+   DB_LOGGING=false
+   ```
+
+   `DATABASE_URL` debe ser una URL estándar de PostgreSQL, **no** una URL JDBC. Si apunta a `localhost`, el parámetro `sslmode` se ignora automáticamente para permitir conexiones locales sin SSL. El paquete `database` carga su propio `.env`, por lo que no duplica variables en la API.
 
 3. Ejecuta las migraciones:
    ```bash
-   pnpm --filter @expense-tracker/api migration:run
+   pnpm --filter @expense-tracker/database migration:run
    ```
 
 4. Arranca el backend en desarrollo:
@@ -123,11 +139,16 @@ El flujo de dependencias apunta hacia el dominio: los casos de uso solo conocen 
 | `pnpm --filter @expense-tracker/api lint` | ESLint con autofix |
 | `pnpm --filter @expense-tracker/api test` | Tests unitarios |
 | `pnpm --filter @expense-tracker/api test:e2e` | Tests e2e |
-| `pnpm --filter @expense-tracker/api migration:generate src/infrastructure/out/persistence/typeorm/migrations/Nombre` | Genera migración |
-| `pnpm --filter @expense-tracker/api migration:run` | Aplica migraciones |
-| `pnpm --filter @expense-tracker/api migration:revert` | Revierte la última migración |
-| `pnpm --filter @expense-tracker/api migration:show` | Muestra el estado de las migraciones |
-| `pnpm --filter @expense-tracker/api schema:log` | Muestra el SQL pendiente entre entidades y BD |
+
+### Base de datos (`packages/database`)
+
+| Comando | Descripción |
+|---|---|
+| `pnpm --filter @expense-tracker/database migration:generate src/migrations/Nombre` | Genera migración |
+| `pnpm --filter @expense-tracker/database migration:run` | Aplica migraciones |
+| `pnpm --filter @expense-tracker/database migration:revert` | Revierte la última migración |
+| `pnpm --filter @expense-tracker/database migration:show` | Muestra el estado de las migraciones |
+| `pnpm --filter @expense-tracker/database schema:log` | Muestra el SQL pendiente entre entidades y BD |
 
 ## Migraciones y base de datos existente
 
@@ -136,7 +157,7 @@ La migración inicial es idempotente: crea las tablas si no existen y agrega las
 Para verificar diferencias contra una base existente:
 
 ```bash
-pnpm --filter @expense-tracker/api schema:log
+pnpm --filter @expense-tracker/database schema:log
 ```
 
 ## Docker
@@ -145,7 +166,7 @@ El `Dockerfile` vive en la raíz porque necesita el contexto completo del monore
 
 ```bash
 docker build -t expense-tracker .
-docker run --env-file apps/api/.env -p 8080:8080 expense-tracker
+docker run --env-file apps/api/.env --env-file packages/database/.env -p 8080:8080 expense-tracker
 ```
 
 El contenedor aplica las migraciones pendientes antes de arrancar la aplicación.

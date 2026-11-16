@@ -1,11 +1,13 @@
 import Decimal from 'decimal.js';
-import { Account } from '../../domain/model/account';
-import { Loan } from '../../domain/model/loan';
-import { Transaction } from '../../domain/model/transaction';
-import { AccountRepositoryPort } from '../../domain/port/out/account.repository.port';
-import { LoanRepositoryPort } from '../../domain/port/out/loan.repository.port';
-import { TransactionRepositoryPort } from '../../domain/port/out/transaction.repository.port';
-import { UnitOfWorkPort } from '../../domain/port/out/unit-of-work.port';
+import {
+  Account,
+  AccountRepositoryPort,
+  Loan,
+  LoanRepositoryPort,
+  Transaction,
+  TransactionRepositoryPort,
+  UnitOfWorkPort,
+} from '@expense-tracker/core';
 import { LoanService } from './loan.service';
 
 describe('LoanService', () => {
