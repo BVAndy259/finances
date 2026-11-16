@@ -22,6 +22,20 @@ export interface RegisterInput {
   alias?: string;
 }
 
+export interface Account {
+  id?: string;
+  userId: string;
+  name: string;
+  balance: string;
+  currency: string;
+  createdAt: string;
+}
+
+export interface AccountInput {
+  name: string;
+  currency: string;
+}
+
 export interface AccountSummary {
   id?: string;
   name: string;
