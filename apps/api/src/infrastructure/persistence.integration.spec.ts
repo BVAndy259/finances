@@ -18,6 +18,7 @@ import {
 } from '@expense-tracker/database';
 import { AccountService } from '../application/usecase/account.service';
 import { AppUserService } from '../application/usecase/app-user.service';
+import { DashboardService } from '../application/usecase/dashboard.service';
 import { LoanService } from '../application/usecase/loan.service';
 import { TransactionService } from '../application/usecase/transaction.service';
 
@@ -70,6 +71,7 @@ describe('TypeORM persistence integration', () => {
   let accountService: AccountService;
   let transactionService: TransactionService;
   let loanService: LoanService;
+  let dashboardService: DashboardService;
 
   beforeEach(async () => {
     const db = newDb();
@@ -133,6 +135,11 @@ describe('TypeORM persistence integration', () => {
       accountRepository,
       transactionRepository,
       unitOfWork,
+    );
+    dashboardService = new DashboardService(
+      accountRepository,
+      transactionRepository,
+      loanRepository,
     );
   });
 
@@ -240,5 +247,11 @@ describe('TypeORM persistence integration', () => {
       listed.items[0].id!,
     );
     expect(fetched.id).toBe(listed.items[0].id);
+
+    const summary = await dashboardService.getSummary(user);
+    expect(summary.totalBalance.toFixed(2)).toBe('65.00');
+    expect(summary.income.toFixed(2)).toBe('100.00');
+    expect(summary.expense.toFixed(2)).toBe('25.00');
+    expect(summary.pendingLoansTotal.toFixed(2)).toBe('10.00');
   });
 });

@@ -162,6 +162,13 @@ Todas las rutas requieren `Authorization: Bearer <accessToken>` y solo operan so
 
 Los préstamos y las cuentas se validan contra el usuario autenticado. Los errores de reglas de negocio (saldo insuficiente, sobrepago, etc.) se responden como `400 Bad Request`.
 
+## API de dashboard
+
+- `GET /dashboard/summary` — resumen del mes actual.
+- `GET /dashboard/summary?month=2026-11` — resumen de un mes específico (`YYYY-MM`).
+
+Devuelve saldo total, ingresos, egresos, neto del mes, cuentas con saldo, últimas 5 transacciones y préstamos pendientes con su total.
+
 ## Scripts
 
 ### Raíz (Turborepo)
