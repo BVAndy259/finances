@@ -5,6 +5,7 @@ import { AuthModule } from './auth.module';
 import configuration from './config/configuration';
 import { validateEnvironment } from './config/env.validation';
 import { BotModule } from './interfaces/bot/bot.module';
+import { AccountsController } from './interfaces/controllers/accounts.controller';
 import { PingController } from './interfaces/controllers/ping.controller';
 
 @Module({
@@ -18,6 +19,6 @@ import { PingController } from './interfaces/controllers/ping.controller';
     AuthModule,
     BotModule,
   ],
-  controllers: [PingController],
+  controllers: [PingController, AccountsController],
 })
 export class AppModule {}

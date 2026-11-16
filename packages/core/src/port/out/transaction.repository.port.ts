@@ -5,4 +5,5 @@ export const TRANSACTION_REPOSITORY = Symbol('TRANSACTION_REPOSITORY');
 export interface TransactionRepositoryPort {
   save(transaction: Transaction): Promise<Transaction>;
   findByAccountId(accountId: string): Promise<Transaction[]>;
+  existsByAccountId(accountId: string): Promise<boolean>;
 }

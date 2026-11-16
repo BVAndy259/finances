@@ -30,14 +30,16 @@ describe('TransactionService', () => {
         .mockImplementation((account: Account) => Promise.resolve(account)),
       findById: jest.fn(),
       findByUserId: jest.fn(),
+      delete: jest.fn(),
     };
     transactionRepository = {
       save: jest
         .fn()
         .mockImplementation((transaction: Transaction) =>
-          Promise.resolve({ ...transaction, id: 10 }),
+          Promise.resolve({ ...transaction, id: '10' }),
         ),
       findByAccountId: jest.fn(),
+      existsByAccountId: jest.fn(),
     };
     unitOfWork = {
       run: <T>(work: () => Promise<T>) => work(),

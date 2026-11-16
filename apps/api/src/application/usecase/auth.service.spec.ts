@@ -47,6 +47,7 @@ describe('AuthService', () => {
       ),
       findById: jest.fn(),
       findByUserId: jest.fn(),
+      delete: jest.fn(),
     };
 
     unitOfWork = {

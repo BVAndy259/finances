@@ -29,4 +29,12 @@ export class TransactionRepositoryAdapter implements TransactionRepositoryPort {
     });
     return entities.map((entity) => this.mapper.toDomain(entity));
   }
+
+  async existsByAccountId(accountId: string): Promise<boolean> {
+    const repository = this.context.manager.getRepository(TransactionEntity);
+    const count = await repository.count({
+      where: { account: { id: accountId } },
+    });
+    return count > 0;
+  }
 }
