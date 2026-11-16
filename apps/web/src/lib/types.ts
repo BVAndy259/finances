@@ -43,7 +43,7 @@ export interface AccountSummary {
   currency: string;
 }
 
-export interface TransactionSummary {
+export interface Transaction {
   id?: string;
   accountId: string;
   transactionType: string;
@@ -51,6 +51,37 @@ export interface TransactionSummary {
   description: string;
   location: string;
   transactionDate: string;
+}
+
+export interface PaginatedTransactions {
+  items: Transaction[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface MoneyMovementInput {
+  accountId: string;
+  amount: string;
+  description: string;
+  location?: string;
+}
+
+export interface TransferInput {
+  originAccountId: string;
+  destinationAccountId: string;
+  amount: string;
+  description: string;
+  location?: string;
+}
+
+export interface TransactionFilters {
+  accountId?: string;
+  type?: string;
+  from?: string;
+  to?: string;
+  page: number;
+  limit: number;
 }
 
 export interface LoanSummary {
@@ -72,7 +103,7 @@ export interface DashboardSummary {
   expense: string;
   net: string;
   accounts: AccountSummary[];
-  recentTransactions: TransactionSummary[];
+  recentTransactions: Transaction[];
   loans: {
     total: string;
     count: number;
