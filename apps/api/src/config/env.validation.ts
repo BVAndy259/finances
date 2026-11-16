@@ -10,6 +10,14 @@ export function validateEnvironment(
     missing.push('BOT_TOKEN');
   }
 
+  if (!config.JWT_ACCESS_SECRET) {
+    missing.push('JWT_ACCESS_SECRET');
+  }
+
+  if (!config.JWT_REFRESH_SECRET) {
+    missing.push('JWT_REFRESH_SECRET');
+  }
+
   if (missing.length > 0) {
     throw new Error(
       `Faltan variables de entorno obligatorias: ${missing.join(', ')}`,

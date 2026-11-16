@@ -28,6 +28,9 @@ const SCHEMA = `
   CREATE TABLE "app_user" (
     "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     "telegram_chat_id" varchar UNIQUE,
+    "email" varchar UNIQUE,
+    "password_hash" varchar,
+    "refresh_token_hash" varchar(64),
     "alias" varchar,
     "created_at" timestamp DEFAULT now()
   );

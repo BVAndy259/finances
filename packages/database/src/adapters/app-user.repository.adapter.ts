@@ -17,6 +17,18 @@ export class AppUserRepositoryAdapter implements AppUserRepositoryPort {
     return this.mapper.toDomain(saved);
   }
 
+  async findById(id: string): Promise<AppUser | null> {
+    const repository = this.context.manager.getRepository(AppUserEntity);
+    const entity = await repository.findOne({ where: { id } });
+    return entity ? this.mapper.toDomain(entity) : null;
+  }
+
+  async findByEmail(email: string): Promise<AppUser | null> {
+    const repository = this.context.manager.getRepository(AppUserEntity);
+    const entity = await repository.findOne({ where: { email } });
+    return entity ? this.mapper.toDomain(entity) : null;
+  }
+
   async findByTelegramChatId(telegramChatId: string): Promise<AppUser | null> {
     const repository = this.context.manager.getRepository(AppUserEntity);
     const entity = await repository.findOne({ where: { telegramChatId } });

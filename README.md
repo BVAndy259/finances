@@ -97,6 +97,12 @@ El flujo de dependencias apunta hacia el dominio: los casos de uso solo conocen 
    TELEGRAM_BOT_USERNAME=kratos_finanzas_bot
    BOT_ENABLED=true
    PORT=8080
+   JWT_ACCESS_SECRET=un_secreto_largo_para_access
+   JWT_ACCESS_EXPIRES_IN=15m
+   JWT_REFRESH_SECRET=otro_secreto_largo_para_refresh
+   JWT_REFRESH_EXPIRES_IN=7d
+   COOKIE_SECURE=false
+   CORS_ORIGINS=http://localhost:3000
    ```
 
    `packages/database/.env`:
@@ -116,6 +122,16 @@ El flujo de dependencias apunta hacia el dominio: los casos de uso solo conocen 
    ```bash
    pnpm --filter @expense-tracker/api start:dev
    ```
+
+## Autenticación
+
+- `POST /auth/register` — crea usuario con email/contraseña, su cuenta "Efectivo" por defecto y devuelve un access token. El refresh token se guarda en una cookie `httpOnly`.
+- `POST /auth/login` — valida credenciales y devuelve un access token + cookie de refresh.
+- `POST /auth/refresh` — rota el refresh token (cookie o body) y devuelve un nuevo access token.
+- `POST /auth/logout` — revoca el refresh token y limpia la cookie.
+- `GET /auth/me` — devuelve el perfil autenticado.
+
+Las contraseñas se hashean con Argon2. Los access tokens son JWT de corta duración; los refresh tokens se rotan y se almacenan hasheados en la base de datos. El bot de Telegram sigue funcionando con usuarios sin email.
 
 ## Scripts
 
@@ -182,6 +198,10 @@ El contenedor aplica las migraciones pendientes antes de arrancar la aplicación
    - `BOT_TOKEN`
    - `TELEGRAM_BOT_USERNAME` (opcional)
    - `PORT` (opcional, por defecto `8080`)
+   - `JWT_ACCESS_SECRET` y `JWT_REFRESH_SECRET`
+   - `JWT_ACCESS_EXPIRES_IN` y `JWT_REFRESH_EXPIRES_IN` (opcionales)
+   - `COOKIE_SECURE=true` en producción
+   - `CORS_ORIGINS` con el dominio del frontend
 4. El despliegue se ejecuta automáticamente desde la rama configurada.
 
 ## Migración desde Java
@@ -192,6 +212,6 @@ El código Java original se conserva temporalmente en `legacy-java/` para compar
 
 - [ ] Frontend Next.js (`apps/web`).
 - [x] UUID como identificadores.
-- [ ] Autenticación JWT.
+- [x] Autenticación JWT con refresh tokens.
 - [ ] Comando `/resumen` para reportes mensuales.
 - [ ] Exportación de datos a Excel mediante `/exportar`.
