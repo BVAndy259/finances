@@ -22,6 +22,12 @@ export interface RegisterInput {
   alias?: string;
 }
 
+export interface UpdateCredentialsInput {
+  currentPassword: string;
+  email?: string;
+  newPassword?: string;
+}
+
 export interface Account {
   id?: string;
   userId: string;

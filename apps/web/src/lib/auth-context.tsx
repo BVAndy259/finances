@@ -19,6 +19,7 @@ import type {
   AuthUser,
   LoginInput,
   RegisterInput,
+  UpdateCredentialsInput,
 } from './types';
 
 interface AuthContextValue {
@@ -26,6 +27,7 @@ interface AuthContextValue {
   isLoading: boolean;
   login: (input: LoginInput) => Promise<void>;
   register: (input: RegisterInput) => Promise<void>;
+  updateCredentials: (input: UpdateCredentialsInput) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -83,6 +85,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(auth.user);
   }, []);
 
+  const updateCredentials = useCallback(
+    async (input: UpdateCredentialsInput) => {
+      const auth = await apiFetch<AuthResponse>('/auth/credentials', {
+        method: 'PATCH',
+        body: JSON.stringify(input),
+      });
+
+      setAccessToken(auth.accessToken);
+      setUser(auth.user);
+    },
+    [],
+  );
+
   const logout = useCallback(async () => {
     try {
       await apiFetch('/auth/logout', { method: 'POST' }, false);
@@ -93,8 +108,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, isLoading, login, register, logout }),
-    [user, isLoading, login, register, logout],
+    () => ({ user, isLoading, login, register, updateCredentials, logout }),
+    [user, isLoading, login, register, updateCredentials, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
