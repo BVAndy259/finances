@@ -1,0 +1,46 @@
+erDiagram
+    APP_USER ||--o{ ACCOUNT : "posee"
+    APP_USER ||--o{ LOAN : "otorga"
+    ACCOUNT ||--o{ TRANSACTION : "registra"
+    ACCOUNT ||--o{ LOAN : "origen"
+
+    APP_USER {
+        uuid id PK
+        varchar telegram_chat_id UK "opcional"
+        varchar email UK "opcional"
+        varchar password_hash "Argon2id"
+        varchar refresh_token_hash
+        varchar alias
+        timestamp created_at
+    }
+
+    ACCOUNT {
+        uuid id PK
+        uuid user_id FK
+        varchar name "Yape, Efectivo, BCP"
+        numeric balance "numeric 38,2"
+        varchar currency "PEN"
+        timestamp created_at
+    }
+
+    TRANSACTION {
+        uuid id PK
+        uuid account_id FK
+        varchar transaction_type "6 valores"
+        numeric amount "numeric 38,2"
+        varchar description
+        varchar location "Bot, Web"
+        timestamp transaction_date
+    }
+
+    LOAN {
+        uuid id PK
+        uuid user_id FK
+        uuid account_id FK
+        varchar debtor_name
+        numeric amount "numeric 38,2"
+        numeric paid_amount "numeric 12,2"
+        date due_date "opcional"
+        varchar status "PENDIENTE, PAGO_PARCIAL, PAGADO"
+        timestamp created_at
+    }

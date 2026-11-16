@@ -1,0 +1,46 @@
+// Fuente DBML para dbdiagram.io - Gestor de Finanzas
+// Refleja el estado final del esquema tras las migraciones de TypeORM.
+// Pega este contenido en https://dbdiagram.io para regenerar el diagrama ER.
+
+Table app_user {
+  id uuid [pk, default: `gen_random_uuid()`]
+  telegram_chat_id varchar(255) [unique, note: 'ID de chat de Telegram (opcional si usa credenciales web)']
+  email varchar(255) [unique, note: 'Email de acceso web']
+  password_hash varchar(255) [note: 'Hash Argon2id']
+  refresh_token_hash varchar(64) [note: 'SHA-256 del refresh token vigente']
+  alias varchar(255) [note: 'Ej: Admin']
+  created_at timestamp
+
+  Note: 'Usuario con Telegram, credenciales web o ambos'
+}
+
+Table account {
+  id uuid [pk, default: `gen_random_uuid()`]
+  user_id uuid [not null, ref: > app_user.id]
+  name varchar(255) [note: 'Ej: Yape, Efectivo, Depósito a cuenta']
+  balance numeric(38,2) [not null, note: 'Saldo exacto']
+  currency varchar(3) [note: 'ISO 4217. Ej: PEN']
+  created_at timestamp
+}
+
+Table transaction {
+  id uuid [pk, default: `gen_random_uuid()`]
+  account_id uuid [not null, ref: > account.id]
+  transaction_type varchar(255) [note: 'INGRESO | EGRESO | TRANSFERENCIA_SALIDA | TRANSFERENCIA_ENTRADA | EGRESO_PRESTAMO | INGRESO_COBRO']
+  amount numeric(38,2) [not null]
+  description varchar(255)
+  location varchar(255) [note: 'Ej: Mercado Central, Transporte, Bot, Web']
+  transaction_date timestamp
+}
+
+Table loan {
+  id uuid [pk, default: `gen_random_uuid()`]
+  user_id uuid [not null, ref: > app_user.id]
+  account_id uuid [not null, ref: > account.id]
+  debtor_name varchar(255)
+  amount numeric(38,2) [not null, note: 'Monto prestado']
+  paid_amount numeric(12,2) [not null, note: 'Total abonado']
+  due_date date [note: 'Fecha límite de pago (opcional)']
+  status varchar(255) [note: 'PENDIENTE | PAGO_PARCIAL | PAGADO']
+  created_at timestamp
+}
