@@ -49,11 +49,11 @@ export function ChangeEmailForm() {
   };
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h2 className="text-sm font-semibold text-slate-900">
+    <section className="rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 p-6 shadow-sm">
+      <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
         Cambiar email
       </h2>
-      <p className="mt-1 text-sm text-slate-500">
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
         Necesitas tu contraseña actual para confirmar el cambio.
       </p>
 
@@ -65,7 +65,7 @@ export function ChangeEmailForm() {
         <div>
           <label
             htmlFor="email-current-password"
-            className="mb-1 block text-sm font-medium text-slate-700"
+            className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Contraseña actual
           </label>
@@ -76,7 +76,7 @@ export function ChangeEmailForm() {
             {...register('currentPassword')}
           />
           {errors.currentPassword && (
-            <p className="mt-1 text-xs text-red-600">
+            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
               {errors.currentPassword.message}
             </p>
           )}
@@ -85,7 +85,7 @@ export function ChangeEmailForm() {
         <div>
           <label
             htmlFor="email-new"
-            className="mb-1 block text-sm font-medium text-slate-700"
+            className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Nuevo email
           </label>
@@ -97,17 +97,17 @@ export function ChangeEmailForm() {
             {...register('email')}
           />
           {errors.email && (
-            <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
+            <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.email.message}</p>
           )}
         </div>
 
         {serverError && (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
             {serverError}
           </p>
         )}
         {success && (
-          <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+          <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
             {success}
           </p>
         )}
@@ -172,11 +172,11 @@ export function ChangePasswordForm() {
   };
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h2 className="text-sm font-semibold text-slate-900">
+    <section className="rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 p-6 shadow-sm">
+      <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
         Cambiar contraseña
       </h2>
-      <p className="mt-1 text-sm text-slate-500">
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
         Necesitas tu contraseña actual para confirmar el cambio.
       </p>
 
@@ -188,7 +188,7 @@ export function ChangePasswordForm() {
         <div>
           <label
             htmlFor="password-current"
-            className="mb-1 block text-sm font-medium text-slate-700"
+            className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Contraseña actual
           </label>
@@ -199,7 +199,7 @@ export function ChangePasswordForm() {
             {...register('currentPassword')}
           />
           {errors.currentPassword && (
-            <p className="mt-1 text-xs text-red-600">
+            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
               {errors.currentPassword.message}
             </p>
           )}
@@ -208,7 +208,7 @@ export function ChangePasswordForm() {
         <div>
           <label
             htmlFor="password-new"
-            className="mb-1 block text-sm font-medium text-slate-700"
+            className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Nueva contraseña
           </label>
@@ -219,7 +219,7 @@ export function ChangePasswordForm() {
             {...register('newPassword')}
           />
           {errors.newPassword && (
-            <p className="mt-1 text-xs text-red-600">
+            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
               {errors.newPassword.message}
             </p>
           )}
@@ -228,7 +228,7 @@ export function ChangePasswordForm() {
         <div>
           <label
             htmlFor="password-confirm"
-            className="mb-1 block text-sm font-medium text-slate-700"
+            className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Confirmar nueva contraseña
           </label>
@@ -239,19 +239,19 @@ export function ChangePasswordForm() {
             {...register('confirmPassword')}
           />
           {errors.confirmPassword && (
-            <p className="mt-1 text-xs text-red-600">
+            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
               {errors.confirmPassword.message}
             </p>
           )}
         </div>
 
         {serverError && (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
             {serverError}
           </p>
         )}
         {success && (
-          <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+          <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
             {success}
           </p>
         )}

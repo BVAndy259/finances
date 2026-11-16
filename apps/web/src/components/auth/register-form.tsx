@@ -76,7 +76,7 @@ export function RegisterForm() {
           ¿Ya tienes cuenta?{' '}
           <Link
             href="/login"
-            className="font-medium text-emerald-700 hover:underline"
+            className="font-medium text-emerald-700 hover:underline dark:text-emerald-400"
           >
             Inicia sesión
           </Link>
@@ -87,7 +87,7 @@ export function RegisterForm() {
         <div>
           <label
             htmlFor="email"
-            className="mb-1 block text-sm font-medium text-slate-700"
+            className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Email
           </label>
@@ -99,16 +99,16 @@ export function RegisterForm() {
             {...register('email')}
           />
           {errors.email && (
-            <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
+            <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.email.message}</p>
           )}
         </div>
 
         <div>
           <label
             htmlFor="alias"
-            className="mb-1 block text-sm font-medium text-slate-700"
+            className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
-            Alias <span className="text-slate-400">(opcional)</span>
+            Alias <span className="text-slate-400 dark:text-slate-500">(opcional)</span>
           </label>
           <Input
             id="alias"
@@ -117,14 +117,14 @@ export function RegisterForm() {
             {...register('alias')}
           />
           {errors.alias && (
-            <p className="mt-1 text-xs text-red-600">{errors.alias.message}</p>
+            <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.alias.message}</p>
           )}
         </div>
 
         <div>
           <label
             htmlFor="password"
-            className="mb-1 block text-sm font-medium text-slate-700"
+            className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Contraseña
           </label>
@@ -136,7 +136,7 @@ export function RegisterForm() {
             {...register('password')}
           />
           {errors.password && (
-            <p className="mt-1 text-xs text-red-600">
+            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
               {errors.password.message}
             </p>
           )}
@@ -145,7 +145,7 @@ export function RegisterForm() {
         <div>
           <label
             htmlFor="confirmPassword"
-            className="mb-1 block text-sm font-medium text-slate-700"
+            className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Confirmar contraseña
           </label>
@@ -157,14 +157,14 @@ export function RegisterForm() {
             {...register('confirmPassword')}
           />
           {errors.confirmPassword && (
-            <p className="mt-1 text-xs text-red-600">
+            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
               {errors.confirmPassword.message}
             </p>
           )}
         </div>
 
         {serverError && (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
             {serverError}
           </p>
         )}

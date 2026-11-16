@@ -73,11 +73,11 @@ export function LoanPaymentForm({
 
   return (
     <form className="space-y-4" onSubmit={handleSubmit(submit)} noValidate>
-      <div className="rounded-xl bg-slate-50 p-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+      <div className="rounded-xl bg-slate-50 dark:bg-slate-800/60 p-4">
+        <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
           Deuda pendiente de {loan.debtorName}
         </p>
-        <p className="mt-1 text-xl font-semibold text-slate-900">
+        <p className="mt-1 text-xl font-semibold text-slate-900 dark:text-slate-100">
           {formatCurrency(loan.remainingAmount)}
         </p>
       </div>
@@ -85,7 +85,7 @@ export function LoanPaymentForm({
       <div>
         <label
           htmlFor="payment-account"
-          className="mb-1 block text-sm font-medium text-slate-700"
+          className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
         >
           Cuenta donde recibes el abono
         </label>
@@ -97,7 +97,7 @@ export function LoanPaymentForm({
           ))}
         </Select>
         {errors.accountId && (
-          <p className="mt-1 text-xs text-red-600">
+          <p className="mt-1 text-xs text-red-600 dark:text-red-400">
             {errors.accountId.message}
           </p>
         )}
@@ -106,7 +106,7 @@ export function LoanPaymentForm({
       <div>
         <label
           htmlFor="payment-amount"
-          className="mb-1 block text-sm font-medium text-slate-700"
+          className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
         >
           Monto del abono
         </label>
@@ -117,12 +117,12 @@ export function LoanPaymentForm({
           {...register('amount')}
         />
         {errors.amount && (
-          <p className="mt-1 text-xs text-red-600">{errors.amount.message}</p>
+          <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.amount.message}</p>
         )}
       </div>
 
       {serverError && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
           {serverError}
         </p>
       )}

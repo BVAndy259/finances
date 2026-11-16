@@ -37,15 +37,15 @@ function SummaryCard({
   label,
   value,
   icon: Icon,
-  valueClassName = 'text-slate-900',
+  valueClassName = 'text-slate-900 dark:text-slate-100',
 }: SummaryCardProps) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 p-5 shadow-sm">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+        <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
           {label}
         </p>
-        <span className="grid h-9 w-9 place-items-center rounded-lg bg-slate-100 text-slate-600">
+        <span className="grid h-9 w-9 place-items-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
           <Icon className="h-4 w-4" />
         </span>
       </div>
@@ -57,18 +57,18 @@ function SummaryCard({
 function DashboardSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="h-8 w-64 animate-pulse rounded bg-slate-200" />
+      <div className="h-8 w-64 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {Array.from({ length: 5 }).map((_, index) => (
           <div
             key={index}
-            className="h-28 animate-pulse rounded-2xl border border-slate-200 bg-white"
+            className="h-28 animate-pulse rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
           />
         ))}
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="h-72 animate-pulse rounded-2xl border border-slate-200 bg-white" />
-        <div className="h-72 animate-pulse rounded-2xl border border-slate-200 bg-white" />
+        <div className="h-72 animate-pulse rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900" />
+        <div className="h-72 animate-pulse rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900" />
       </div>
     </div>
   );
@@ -84,11 +84,11 @@ export function DashboardView() {
 
   if (isError || !data) {
     return (
-      <div className="rounded-2xl border border-red-200 bg-red-50 p-6">
-        <h2 className="text-sm font-semibold text-red-800">
+      <div className="rounded-2xl border border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/40 p-6">
+        <h2 className="text-sm font-semibold text-red-800 dark:text-red-300">
           No se pudo cargar el resumen
         </h2>
-        <p className="mt-1 text-sm text-red-700">{getErrorMessage(error)}</p>
+        <p className="mt-1 text-sm text-red-700 dark:text-red-300">{getErrorMessage(error)}</p>
         <Button
           variant="secondary"
           className="mt-4"
@@ -106,8 +106,8 @@ export function DashboardView() {
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-sm text-slate-500">Hola, {user?.alias}</p>
-          <h1 className="text-2xl font-semibold text-slate-900">
+          <p className="text-sm text-slate-500 dark:text-slate-400">Hola, {user?.alias}</p>
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
             Resumen de {formatMonth(data.month)}
           </h1>
         </div>
@@ -126,45 +126,45 @@ export function DashboardView() {
           label="Ingresos del mes"
           value={formatCurrency(data.income)}
           icon={TrendingUp}
-          valueClassName="text-emerald-600"
+          valueClassName="text-emerald-600 dark:text-emerald-400"
         />
         <SummaryCard
           label="Egresos del mes"
           value={formatCurrency(data.expense)}
           icon={TrendingDown}
-          valueClassName="text-red-600"
+          valueClassName="text-red-600 dark:text-red-400"
         />
         <SummaryCard
           label="Balance del mes"
           value={formatCurrency(data.net)}
           icon={Scale}
-          valueClassName={netNumber >= 0 ? 'text-emerald-600' : 'text-red-600'}
+          valueClassName={netNumber >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}
         />
         <SummaryCard
           label="Por cobrar"
           value={formatCurrency(data.loans.total)}
           icon={HandCoins}
-          valueClassName="text-amber-600"
+          valueClassName="text-amber-600 dark:text-amber-400"
         />
       </section>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-900">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               Últimas transacciones
             </h2>
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-slate-500 dark:text-slate-400">
               {data.recentTransactions.length} recientes
             </span>
           </div>
 
           {data.recentTransactions.length === 0 ? (
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               Aún no tienes transacciones registradas.
             </p>
           ) : (
-            <ul className="divide-y divide-slate-100">
+            <ul className="divide-y divide-slate-100 dark:divide-slate-800">
               {data.recentTransactions.map((transaction) => {
                 const positive = INCOME_TYPES.has(transaction.transactionType);
 
@@ -174,17 +174,17 @@ export function DashboardView() {
                     className="flex items-center justify-between gap-3 py-3"
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-slate-900">
+                      <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
                         {transaction.description}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
                         {transactionLabel(transaction.transactionType)} ·{' '}
                         {formatDate(transaction.transactionDate)}
                       </p>
                     </div>
                     <span
                       className={`shrink-0 text-sm font-semibold ${
-                        positive ? 'text-emerald-600' : 'text-red-600'
+                        positive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
                       }`}
                     >
                       {positive ? '+' : '-'}
@@ -198,13 +198,13 @@ export function DashboardView() {
         </section>
 
         <div className="space-y-4">
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="mb-4 text-sm font-semibold text-slate-900">
+          <section className="rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 p-5 shadow-sm">
+            <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
               Cuentas
             </h2>
 
             {data.accounts.length === 0 ? (
-              <p className="text-sm text-slate-500">No tienes cuentas aún.</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">No tienes cuentas aún.</p>
             ) : (
               <ul className="space-y-3">
                 {data.accounts.map((account) => (
@@ -212,10 +212,10 @@ export function DashboardView() {
                     key={account.id}
                     className="flex items-center justify-between"
                   >
-                    <span className="text-sm text-slate-700">
+                    <span className="text-sm text-slate-700 dark:text-slate-300">
                       {account.name}
                     </span>
-                    <span className="text-sm font-semibold text-slate-900">
+                    <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                       {formatCurrency(account.balance, account.currency)}
                     </span>
                   </li>
@@ -224,37 +224,37 @@ export function DashboardView() {
             )}
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <section className="rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 p-5 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-slate-900">
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                 Préstamos pendientes
               </h2>
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
                 {data.loans.count} activos
               </span>
             </div>
 
             {data.loans.items.length === 0 ? (
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 No tienes préstamos pendientes.
               </p>
             ) : (
-              <ul className="divide-y divide-slate-100">
+              <ul className="divide-y divide-slate-100 dark:divide-slate-800">
                 {data.loans.items.map((loan) => (
                   <li
                     key={loan.id}
                     className="flex items-center justify-between gap-3 py-3"
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-slate-900">
+                      <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
                         {loan.debtorName}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
                         {loanStatusLabel(loan.status)}
                         {loan.dueDate ? ` · vence ${loan.dueDate}` : ''}
                       </p>
                     </div>
-                    <span className="shrink-0 text-sm font-semibold text-amber-600">
+                    <span className="shrink-0 text-sm font-semibold text-amber-600 dark:text-amber-400">
                       {formatCurrency(loan.remainingAmount)}
                     </span>
                   </li>
@@ -265,7 +265,7 @@ export function DashboardView() {
         </div>
       </div>
 
-      <p className="text-xs text-slate-400">Datos actualizados desde la API.</p>
+      <p className="text-xs text-slate-400 dark:text-slate-500">Datos actualizados desde la API.</p>
     </div>
   );
 }
