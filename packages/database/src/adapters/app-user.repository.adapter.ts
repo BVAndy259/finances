@@ -17,6 +17,12 @@ export class AppUserRepositoryAdapter implements AppUserRepositoryPort {
     return this.mapper.toDomain(saved);
   }
 
+  async findAll(): Promise<AppUser[]> {
+    const repository = this.context.manager.getRepository(AppUserEntity);
+    const entities = await repository.find({ order: { createdAt: 'ASC' } });
+    return entities.map((entity) => this.mapper.toDomain(entity));
+  }
+
   async findById(id: string): Promise<AppUser | null> {
     const repository = this.context.manager.getRepository(AppUserEntity);
     const entity = await repository.findOne({ where: { id } });
