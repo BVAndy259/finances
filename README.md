@@ -140,8 +140,26 @@ El flujo de dependencias apunta hacia el dominio: los casos de uso solo conocen 
 - `POST /auth/refresh` — rota el refresh token (cookie o body) y devuelve un nuevo access token.
 - `POST /auth/logout` — revoca el refresh token y limpia la cookie.
 - `GET /auth/me` — devuelve el perfil autenticado.
+- `PATCH /auth/credentials` — cambia email y/o contraseña; requiere la contraseña actual.
 
-Las contraseñas se hashean con Argon2. Los access tokens son JWT de corta duración; los refresh tokens se rotan y se almacenan hasheados en la base de datos. El bot de Telegram sigue funcionando con usuarios sin email.
+Las contraseñas se hashean con **Argon2id** (`m=19456`, `t=2`, `p=1`, salida de 32 bytes, versión 19). Si la política de hashing cambia, el hash se actualiza automáticamente al iniciar sesión. Los access tokens son JWT de corta duración; los refresh tokens se rotan y se almacenan hasheados en la base de datos. El bot de Telegram sigue funcionando con usuarios sin email.
+
+### Vincular credenciales a un usuario existente de Telegram
+
+Si ya tienes datos creados desde el bot y quieres acceder a ellos desde la web:
+
+1. Asegura que las migraciones estén aplicadas:
+   ```bash
+   pnpm db:migrate
+   ```
+2. Ejecuta el CLI interactivo:
+   ```bash
+   pnpm auth:set-credentials
+   ```
+3. Selecciona el usuario (si hay uno solo se usa automáticamente) y define email y contraseña. La contraseña se escribe con entrada oculta.
+4. Inicia sesión en `/login` con esas credenciales.
+
+El comando actualiza el mismo `app_user`: **no crea otro usuario**, conserva `telegram_chat_id`, cuentas, transacciones y préstamos. La página `/register` sigue disponible para crear usuarios web nuevos.
 
 ## API de cuentas
 
@@ -201,6 +219,8 @@ El access token se mantiene en memoria; la sesión se restaura al recargar usand
 
 ## Scripts
 
+> `pnpm dev` no ejecuta migraciones automáticamente. Ejecuta `pnpm db:migrate` antes de arrancar contra una base existente.
+
 ### Raíz (Turborepo)
 
 | Comando | Descripción |
@@ -210,6 +230,7 @@ El access token se mantiene en memoria; la sesión se restaura al recargar usand
 | `pnpm lint` | ESLint en todos los paquetes |
 | `pnpm test` | Tests unitarios de todos los paquetes |
 | `pnpm typecheck` | Typecheck de todos los paquetes |
+| `pnpm verify` | Lint + typecheck + tests + build |
 
 ### API (`apps/api`)
 
@@ -241,6 +262,12 @@ El access token se mantiene en memoria; la sesión se restaura al recargar usand
 | `pnpm --filter @expense-tracker/database migration:revert` | Revierte la última migración |
 | `pnpm --filter @expense-tracker/database migration:show` | Muestra el estado de las migraciones |
 | `pnpm --filter @expense-tracker/database schema:log` | Muestra el SQL pendiente entre entidades y BD |
+
+### Cuenta (`apps/api`)
+
+| Comando | Descripción |
+|---|---|
+| `pnpm auth:set-credentials` | Vincula email/password a un usuario existente de Telegram |
 
 ## CI
 
