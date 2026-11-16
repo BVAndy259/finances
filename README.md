@@ -242,11 +242,24 @@ El access token se mantiene en memoria; la sesión se restaura al recargar usand
 | `pnpm --filter @expense-tracker/database migration:show` | Muestra el estado de las migraciones |
 | `pnpm --filter @expense-tracker/database schema:log` | Muestra el SQL pendiente entre entidades y BD |
 
+## CI
+
+El workflow `.github/workflows/ci.yml` se ejecuta en cada push/PR y valida el monorepo completo:
+
+1. `pnpm lint`, `pnpm typecheck` y `pnpm build`.
+2. Levanta PostgreSQL 17 y ejecuta **las migraciones reales**.
+3. `pnpm test` y `pnpm test:e2e`.
+4. Construye la imagen Docker, arranca el contenedor con PostgreSQL y verifica `GET /health`.
+
+Esto cubre lo que los tests unitarios con `pg-mem` no validan: la ejecución de las migraciones y el arranque real del contenedor.
+
 ## Migraciones y base de datos existente
 
 La migración inicial es idempotente: crea las tablas si no existen y agrega las columnas `paid_amount` y `due_date` si faltan. El esquema refleja el script SQL original, por lo que los campos que permiten `NULL` en la base de datos se mantienen así; los mappers validan los invariantes de negocio al convertir a dominio.
 
 La migración `ConvertIdsToUuid` convierte las claves primarias y foráneas de `bigint` a `uuid` preservando los datos existentes. **Haz un backup antes de ejecutarla**: su `down()` no revierte automáticamente la conversión.
+
+Las tres migraciones (`InitialSchema`, `ConvertIdsToUuid`, `AddAuthFields`) se validaron contra PostgreSQL 17 ejecutándolas en una base temporal limpia. El CI repite esta validación en cada push/PR.
 
 Para verificar diferencias contra una base existente:
 
@@ -267,6 +280,8 @@ El contenedor aplica las migraciones pendientes antes de arrancar la aplicación
 
 ## Despliegue en Render
 
+El archivo `render.yaml` incluye una definición opcional del Web Service (Docker, plan free, health check en `/health` y variables). Si ya tienes el servicio creado, puedes configurarlo manualmente:
+
 1. Conecta el repositorio como Web Service.
 2. Usa la raíz del repositorio como contexto y el `Dockerfile` de la raíz.
 3. Configura las variables de entorno:
@@ -283,12 +298,22 @@ El contenedor aplica las migraciones pendientes antes de arrancar la aplicación
 
 ## Despliegue del frontend en Vercel
 
+El archivo `apps/web/vercel.json` ya define el framework y los comandos de instalación/build para el monorepo.
+
 1. Importa el repositorio en Vercel.
 2. Configura **Root Directory** en `apps/web`.
-3. Install Command: `cd ../.. && pnpm install --frozen-lockfile`.
-4. Build Command: `cd ../.. && pnpm --filter @expense-tracker/web build`.
-5. Variable de entorno: `NEXT_PUBLIC_API_URL=https://tu-api.onrender.com`.
-6. En Render, agrega el dominio de Vercel a `CORS_ORIGINS` y usa `COOKIE_SECURE=true`.
+3. Variable de entorno: `NEXT_PUBLIC_API_URL=https://tu-api.onrender.com`.
+4. En Render, agrega el dominio de Vercel a `CORS_ORIGINS` y usa `COOKIE_SECURE=true`.
+
+## Checklist antes de mergear a `master`
+
+1. Confirmar que el CI está en verde (incluye migraciones reales y Docker).
+2. Crear un backup de la base de producción.
+3. Ejecutar las migraciones contra una copia/staging antes de producción.
+4. Configurar en Render: `DATABASE_URL`, `BOT_TOKEN`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `COOKIE_SECURE=true`, `CORS_ORIGINS`, `BOT_ENABLED`.
+5. Configurar el cron externo apuntando a `/health` cada 5–10 minutos.
+6. Mergear las ramas en orden y verificar `/health` del servicio desplegado.
+7. Desplegar el frontend en Vercel y probar login, dashboard, cuentas, transacciones y préstamos.
 
 ## Migración desde Java
 
@@ -300,6 +325,7 @@ El código Java original se conserva temporalmente en `legacy-java/` para compar
 - [x] Página de cuentas (CRUD).
 - [x] Página de transacciones (filtros, gastos, ingresos y transferencias).
 - [x] Página de préstamos (listado, creación y abonos).
+- [x] CI con migraciones reales, tests y verificación Docker.
 - [x] UUID como identificadores.
 - [x] Autenticación JWT con refresh tokens.
 - [ ] Comando `/resumen` para reportes mensuales.
