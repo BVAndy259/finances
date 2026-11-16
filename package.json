@@ -14,7 +14,7 @@
     "test": "turbo run test",
     "test:e2e": "turbo run test:e2e",
     "typecheck": "turbo run typecheck",
-    "verify": "turbo run lint typecheck test build",
+    "verify": "turbo run build && turbo run lint typecheck test",
     "api": "pnpm --filter @expense-tracker/api",
     "web": "pnpm --filter @expense-tracker/web",
     "db:generate": "pnpm --filter @expense-tracker/database migration:generate",
