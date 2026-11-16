@@ -19,7 +19,7 @@ export class AccountRepositoryAdapter implements AccountRepositoryPort {
     return this.mapper.toDomain(saved);
   }
 
-  async findById(id: number): Promise<Account | null> {
+  async findById(id: string): Promise<Account | null> {
     const repository = this.context.manager.getRepository(AccountEntity);
     const entity = await repository.findOne({
       where: { id },
@@ -28,7 +28,7 @@ export class AccountRepositoryAdapter implements AccountRepositoryPort {
     return entity ? this.mapper.toDomain(entity) : null;
   }
 
-  async findByUserId(userId: number): Promise<Account[]> {
+  async findByUserId(userId: string): Promise<Account[]> {
     const repository = this.context.manager.getRepository(AccountEntity);
     const entities = await repository.find({
       where: { user: { id: userId } },

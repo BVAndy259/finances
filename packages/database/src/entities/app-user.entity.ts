@@ -3,11 +3,8 @@ import { AccountEntity } from './account.entity';
 
 @Entity('app_user')
 export class AppUserEntity {
-  @PrimaryGeneratedColumn('identity', {
-    type: 'bigint',
-    generatedIdentity: 'BY DEFAULT',
-  })
-  id!: number;
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
 
   @Column({
     name: 'telegram_chat_id',

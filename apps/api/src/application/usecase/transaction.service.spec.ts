@@ -16,8 +16,8 @@ describe('TransactionService', () => {
 
   const buildAccount = (balance: string): Account => {
     const account = new Account();
-    account.id = 1;
-    account.userId = 1;
+    account.id = '1';
+    account.userId = '1';
     account.name = 'Yape';
     account.balance = new Decimal(balance);
     return account;
@@ -95,7 +95,7 @@ describe('TransactionService', () => {
   it('transfiere saldo y genera las dos transacciones', async () => {
     const origin = buildAccount('100.00');
     const destination = buildAccount('20.00');
-    destination.id = 2;
+    destination.id = '2';
     destination.name = 'BCP';
 
     await service.transfer(
@@ -115,7 +115,7 @@ describe('TransactionService', () => {
   it('rechaza una transferencia sin saldo suficiente en origen', async () => {
     const origin = buildAccount('5.00');
     const destination = buildAccount('20.00');
-    destination.id = 2;
+    destination.id = '2';
 
     await expect(
       service.transfer(

@@ -1,8 +1,8 @@
 import Decimal from 'decimal.js';
 
 export class Account {
-  id?: number;
-  userId!: number;
+  id?: string;
+  userId!: string;
   name!: string;
   balance: Decimal = new Decimal(0);
   currency = 'PEN';

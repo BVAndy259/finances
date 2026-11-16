@@ -19,8 +19,8 @@ describe('LoanService', () => {
 
   const buildAccount = (balance: string): Account => {
     const account = new Account();
-    account.id = 1;
-    account.userId = 1;
+    account.id = '1';
+    account.userId = '1';
     account.name = 'Yape';
     account.balance = new Decimal(balance);
     return account;
@@ -32,9 +32,9 @@ describe('LoanService', () => {
     status: Loan['status'] = 'PENDIENTE',
   ): Loan => {
     const loan = new Loan();
-    loan.id = 5;
-    loan.userId = 1;
-    loan.accountId = 1;
+    loan.id = '5';
+    loan.userId = '1';
+    loan.accountId = '1';
     loan.debtorName = 'Juan';
     loan.amount = new Decimal(amount);
     loan.paidAmount = new Decimal(paidAmount);
@@ -80,7 +80,7 @@ describe('LoanService', () => {
     const account = buildAccount('0.00');
     loanRepository.findById.mockResolvedValue(loan);
 
-    const updated = await service.payLoan(5, account, new Decimal('30.00'));
+    const updated = await service.payLoan('5', account, new Decimal('30.00'));
 
     expect(account.balance.toFixed(2)).toBe('30.00');
     expect(updated.paidAmount.toFixed(2)).toBe('30.00');
@@ -93,7 +93,7 @@ describe('LoanService', () => {
     const account = buildAccount('0.00');
     loanRepository.findById.mockResolvedValue(loan);
 
-    const updated = await service.payLoan(5, account, new Decimal('30.00'));
+    const updated = await service.payLoan('5', account, new Decimal('30.00'));
 
     expect(account.balance.toFixed(2)).toBe('30.00');
     expect(updated.status).toBe('PAGADO');
@@ -106,7 +106,7 @@ describe('LoanService', () => {
     loanRepository.findById.mockResolvedValue(loan);
 
     await expect(
-      service.payLoan(5, account, new Decimal('31.00')),
+      service.payLoan('5', account, new Decimal('31.00')),
     ).rejects.toThrow('es mayor a la deuda actual');
 
     expect(accountRepository.save).not.toHaveBeenCalled();
@@ -119,7 +119,7 @@ describe('LoanService', () => {
     loanRepository.findById.mockResolvedValue(loan);
 
     await expect(
-      service.payLoan(5, account, new Decimal('10.00')),
+      service.payLoan('5', account, new Decimal('10.00')),
     ).rejects.toThrow('Este préstamo ya fue pagado');
   });
 
@@ -127,7 +127,7 @@ describe('LoanService', () => {
     loanRepository.findById.mockResolvedValue(null);
 
     await expect(
-      service.payLoan(99, buildAccount('0.00'), new Decimal('10.00')),
+      service.payLoan('99', buildAccount('0.00'), new Decimal('10.00')),
     ).rejects.toThrow('Préstamo no encontrado');
   });
 });

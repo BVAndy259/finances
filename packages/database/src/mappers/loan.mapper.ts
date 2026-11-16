@@ -21,9 +21,9 @@ export class LoanMapper {
     }
 
     const loan = new Loan();
-    loan.id = Number(entity.id);
-    loan.userId = Number(entity.user.id);
-    loan.accountId = Number(entity.account.id);
+    loan.id = entity.id;
+    loan.userId = entity.user.id;
+    loan.accountId = entity.account.id;
     loan.debtorName = entity.debtorName ?? '';
     loan.amount = entity.amount;
     loan.paidAmount = entity.paidAmount ?? new Decimal(0);

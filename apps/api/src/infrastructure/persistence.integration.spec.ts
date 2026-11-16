@@ -1,4 +1,5 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
+import { randomUUID } from 'node:crypto';
 import Decimal from 'decimal.js';
 import { DataType, newDb } from 'pg-mem';
 import { DataSource, EntityManager } from 'typeorm';
@@ -20,24 +21,27 @@ import { AppUserService } from '../application/usecase/app-user.service';
 import { LoanService } from '../application/usecase/loan.service';
 import { TransactionService } from '../application/usecase/transaction.service';
 
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 const SCHEMA = `
   CREATE TABLE "app_user" (
-    "id" SERIAL PRIMARY KEY,
+    "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     "telegram_chat_id" varchar UNIQUE,
     "alias" varchar,
     "created_at" timestamp DEFAULT now()
   );
   CREATE TABLE "account" (
-    "id" SERIAL PRIMARY KEY,
-    "user_id" integer REFERENCES "app_user"("id"),
+    "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    "user_id" uuid REFERENCES "app_user"("id"),
     "name" varchar,
     "balance" numeric(12,2),
     "currency" varchar DEFAULT 'PEN',
     "created_at" timestamp DEFAULT now()
   );
   CREATE TABLE "transaction" (
-    "id" SERIAL PRIMARY KEY,
-    "account_id" integer REFERENCES "account"("id"),
+    "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    "account_id" uuid REFERENCES "account"("id"),
     "transaction_type" varchar,
     "amount" numeric(12,2),
     "description" varchar,
@@ -45,9 +49,9 @@ const SCHEMA = `
     "transaction_date" timestamp DEFAULT now()
   );
   CREATE TABLE "loan" (
-    "id" SERIAL PRIMARY KEY,
-    "user_id" integer REFERENCES "app_user"("id"),
-    "account_id" integer REFERENCES "account"("id"),
+    "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    "user_id" uuid REFERENCES "app_user"("id"),
+    "account_id" uuid REFERENCES "account"("id"),
     "debtor_name" varchar,
     "amount" numeric(12,2),
     "paid_amount" numeric(12,2) NOT NULL DEFAULT 0,
@@ -76,12 +80,19 @@ describe('TypeORM persistence integration', () => {
       returns: DataType.text,
       implementation: () => 'test',
     });
+    db.public.registerFunction({
+      name: 'gen_random_uuid',
+      returns: DataType.uuid,
+      impure: true,
+      implementation: () => randomUUID(),
+    });
     db.public.none(SCHEMA);
 
     dataSource = await db.adapters.createTypeormDataSource({
       type: 'postgres',
       entities: typeOrmEntities,
       synchronize: false,
+      uuidExtension: 'pgcrypto',
     });
     await dataSource.initialize();
 
@@ -131,6 +142,7 @@ describe('TypeORM persistence integration', () => {
       '123456',
       'Otro alias',
     );
+    expect(user.id).toMatch(UUID_PATTERN);
     expect(again.id).toBe(user.id);
 
     const yape = await accountService.createAccount(user, 'Yape');
@@ -164,7 +176,7 @@ describe('TypeORM persistence integration', () => {
       null,
     );
 
-    expect(loan.id).toBeDefined();
+    expect(loan.id).toMatch(UUID_PATTERN);
 
     const paidLoan = await loanService.payLoan(
       loan.id!,

@@ -3,9 +3,9 @@ import Decimal from 'decimal.js';
 export type LoanStatus = 'PENDIENTE' | 'PAGO_PARCIAL' | 'PAGADO';
 
 export class Loan {
-  id?: number;
-  userId!: number;
-  accountId!: number;
+  id?: string;
+  userId!: string;
+  accountId!: string;
   debtorName!: string;
   amount!: Decimal;
   paidAmount: Decimal = new Decimal(0);

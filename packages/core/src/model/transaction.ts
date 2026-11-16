@@ -9,8 +9,8 @@ export type TransactionType =
   | 'INGRESO_COBRO';
 
 export class Transaction {
-  id?: number;
-  accountId!: number;
+  id?: string;
+  accountId!: string;
   transactionType!: TransactionType;
   amount!: Decimal;
   description!: string;

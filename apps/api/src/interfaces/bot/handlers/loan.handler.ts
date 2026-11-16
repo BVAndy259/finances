@@ -158,14 +158,14 @@ export class LoanHandler {
 
     const lines = pendingLoans
       .map(
-        (loan) =>
-          `ID: ${loan.id} | ${loan.debtorName} debe S/${formatAmount(loan.remainingAmount)}`,
+        (loan, index) =>
+          `${index + 1}) ${loan.debtorName} debe S/${formatAmount(loan.remainingAmount)}`,
       )
       .join('\n');
 
     ctx.session.state = BotState.WaitingLoanId;
     await ctx.reply(
-      `Préstamos Pendientes:\n\n${lines}\n\nEscribe el número de ID del préstamo que te están abonando:`,
+      `Préstamos Pendientes:\n\n${lines}\n\nEscribe el número de la lista del préstamo que te están abonando:`,
     );
   }
 
@@ -203,22 +203,22 @@ export class LoanHandler {
     }
 
     if (!/^\d+$/.test(text)) {
-      await ctx.reply('Ingresa solo el número de ID (Ej: 1).');
+      await ctx.reply('Ingresa solo el número de la lista (Ej: 1).');
       return;
     }
 
-    const loanId = Number.parseInt(text, 10);
+    const position = Number.parseInt(text, 10);
     const pendingLoans = await this.loanService.getPendingLoans(user);
-    const loan = pendingLoans.find((item) => item.id === loanId);
+    const loan = pendingLoans[position - 1];
 
     if (!loan) {
       await ctx.reply(
-        'ID inválido. Asegúrate de escribir el número correcto de la lista.',
+        'Número inválido. Asegúrate de escribir el número correcto de la lista.',
       );
       return;
     }
 
-    ctx.session.loanId = loanId;
+    ctx.session.loanId = loan.id;
     ctx.session.state = BotState.WaitingPaymentAmount;
     await ctx.reply(
       `La deuda actual es de: S/${formatAmount(loan.remainingAmount)}\n¿Cuánto dinero te abonó hoy? (Ej: 15.00)`,

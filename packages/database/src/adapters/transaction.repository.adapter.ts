@@ -21,7 +21,7 @@ export class TransactionRepositoryAdapter implements TransactionRepositoryPort {
     return this.mapper.toDomain(saved);
   }
 
-  async findByAccountId(accountId: number): Promise<Transaction[]> {
+  async findByAccountId(accountId: string): Promise<Transaction[]> {
     const repository = this.context.manager.getRepository(TransactionEntity);
     const entities = await repository.find({
       where: { account: { id: accountId } },
