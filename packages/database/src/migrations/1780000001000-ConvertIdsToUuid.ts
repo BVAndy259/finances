@@ -44,18 +44,31 @@ export class ConvertIdsToUuid1780000001000 implements MigrationInterface {
       `UPDATE "loan" l SET "new_account_id" = a."new_id" FROM "account" a WHERE l."account_id" = a."id"`,
     );
 
-    await queryRunner.query(
-      `ALTER TABLE "account" DROP CONSTRAINT IF EXISTS "fkjajia7qudllc01cly9yddon8u"`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE "transaction" DROP CONSTRAINT IF EXISTS "fk6g20fcr3bhr6bihgy24rq1r1b"`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE "loan" DROP CONSTRAINT IF EXISTS "fkjcauugddigslh9xi7v2n9tiwj"`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE "loan" DROP CONSTRAINT IF EXISTS "fkgv9cgsh4k76wmaf83ktoekpub"`,
-    );
+    await queryRunner.query(`
+      DO $$
+      DECLARE
+        constraint_record record;
+      BEGIN
+        FOR constraint_record IN
+          SELECT conname, conrelid::regclass AS table_name
+          FROM pg_constraint
+          WHERE contype = 'f'
+            AND connamespace = 'public'::regnamespace
+            AND (
+              (conrelid = 'account'::regclass AND confrelid = 'app_user'::regclass)
+              OR (conrelid = 'transaction'::regclass AND confrelid = 'account'::regclass)
+              OR (conrelid = 'loan'::regclass AND confrelid = 'app_user'::regclass)
+              OR (conrelid = 'loan'::regclass AND confrelid = 'account'::regclass)
+            )
+        LOOP
+          EXECUTE format(
+            'ALTER TABLE %s DROP CONSTRAINT %I',
+            constraint_record.table_name,
+            constraint_record.conname
+          );
+        END LOOP;
+      END $$;
+    `);
 
     await queryRunner.query(
       `ALTER TABLE "app_user" DROP CONSTRAINT IF EXISTS "app_user_pkey"`,
