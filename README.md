@@ -1,13 +1,13 @@
 # Gestor de Finanzas
 
-Monorepo con Turborepo para el registro y gestión de finanzas personales (gastos, ingresos, transferencias y préstamos). Incluye el backend en NestJS con arquitectura hexagonal y un bot de Telegram; próximamente un frontend en Next.js.
+Monorepo con Turborepo para el registro y gestión de finanzas personales (gastos, ingresos, transferencias y préstamos). Incluye backend en NestJS con arquitectura hexagonal, bot de Telegram y frontend en Next.js.
 
 ## Estructura
 
 ```
 apps/
   api/                 # Backend NestJS + bot de Telegram (casos de uso e interfaces)
-  web/                 # Frontend Next.js (pendiente)
+  web/                 # Frontend Next.js (auth, dashboard y navegación base)
 packages/
   core/                # Dominio: modelos, puertos y errores
   database/            # Persistencia TypeORM: entidades, mappers, adapters, migraciones y DataSource
@@ -17,14 +17,16 @@ pnpm-workspace.yaml
 Dockerfile             # Imagen del backend (contexto: raíz del repo)
 ```
 
-Grafo de dependencias: `shared` → `core` → `database` → `api`. El paquete `database` implementa los puertos definidos en `core`; `apps/api` solo orquesta casos de uso e interfaces.
+Grafo de dependencias: `shared` → `core` → `database` → `api`, y `apps/web` consume `shared` y la API. El paquete `database` implementa los puertos definidos en `core`; `apps/api` solo orquesta casos de uso e interfaces.
 
 ## Tecnologías
 
 - **Runtime:** Node.js 22+.
 - **Gestor de paquetes:** pnpm 12+.
 - **Monorepo:** Turborepo 2.
-- **Framework:** NestJS 11.
+- **Framework backend:** NestJS 11.
+- **Framework frontend:** Next.js 16 + React 19 + Tailwind CSS 4.
+- **Datos en frontend:** TanStack Query + React Hook Form + Zod.
 - **Lenguaje:** TypeScript 5.
 - **Persistencia:** TypeORM + PostgreSQL (Supabase).
 - **Bot:** grammY con Long Polling.
@@ -111,6 +113,11 @@ El flujo de dependencias apunta hacia el dominio: los casos de uso solo conocen 
    DB_LOGGING=false
    ```
 
+   `apps/web/.env.local`:
+   ```env
+   NEXT_PUBLIC_API_URL=http://localhost:8080
+   ```
+
    `DATABASE_URL` debe ser una URL estándar de PostgreSQL, **no** una URL JDBC. Si apunta a `localhost`, el parámetro `sslmode` se ignora automáticamente para permitir conexiones locales sin SSL. El paquete `database` carga su propio `.env`, por lo que no duplica variables en la API.
 
 3. Ejecuta las migraciones:
@@ -118,10 +125,13 @@ El flujo de dependencias apunta hacia el dominio: los casos de uso solo conocen 
    pnpm --filter @expense-tracker/database migration:run
    ```
 
-4. Arranca el backend en desarrollo:
+4. Arranca backend y frontend en desarrollo:
    ```bash
    pnpm --filter @expense-tracker/api start:dev
+   pnpm --filter @expense-tracker/web dev
    ```
+
+   También puedes usar `pnpm dev` para levantar todos los paquetes con Turborepo.
 
 ## Autenticación
 
@@ -176,6 +186,17 @@ Devuelve saldo total, ingresos, egresos, neto del mes, cuentas con saldo, últim
 
 Para evitar el spin-down de Render free, configura **cron-job.org** (o similar) para llamar a `https://tu-api.onrender.com/health` cada 5–10 minutos.
 
+## Frontend (`apps/web`)
+
+Next.js 16 (App Router) con Tailwind CSS, TanStack Query, React Hook Form y Zod. La estructura es route-driven: `src/app` para rutas y `src/components` / `src/lib` para UI y lógica compartida.
+
+- `/login` y `/register` — autenticación con email/contraseña.
+- `/dashboard` — resumen del mes consumiendo `GET /dashboard/summary`.
+- `/accounts`, `/transactions`, `/loans` — placeholders para las siguientes iteraciones.
+- `/settings` — perfil del usuario autenticado.
+
+El access token se mantiene en memoria; la sesión se restaura al recargar usando el refresh token en cookie `httpOnly`. El cliente reintenta una vez tras un `401` renovando el token. Además, mientras la app está abierta se llama a `/health` cada 10 minutos para complementar el cron externo.
+
 ## Scripts
 
 ### Raíz (Turborepo)
@@ -198,6 +219,16 @@ Para evitar el spin-down de Render free, configura **cron-job.org** (o similar) 
 | `pnpm --filter @expense-tracker/api lint` | ESLint con autofix |
 | `pnpm --filter @expense-tracker/api test` | Tests unitarios |
 | `pnpm --filter @expense-tracker/api test:e2e` | Tests e2e |
+
+### Frontend (`apps/web`)
+
+| Comando | Descripción |
+|---|---|
+| `pnpm --filter @expense-tracker/web dev` | Next.js en modo desarrollo |
+| `pnpm --filter @expense-tracker/web build` | Build de producción |
+| `pnpm --filter @expense-tracker/web start` | Sirve el build |
+| `pnpm --filter @expense-tracker/web lint` | ESLint |
+| `pnpm --filter @expense-tracker/web typecheck` | TypeScript |
 
 ### Base de datos (`packages/database`)
 
@@ -248,13 +279,23 @@ El contenedor aplica las migraciones pendientes antes de arrancar la aplicación
 4. Configura un cron externo (cron-job.org) apuntando a `/health` cada 5–10 minutos.
 5. El despliegue se ejecuta automáticamente desde la rama configurada.
 
+## Despliegue del frontend en Vercel
+
+1. Importa el repositorio en Vercel.
+2. Configura **Root Directory** en `apps/web`.
+3. Install Command: `cd ../.. && pnpm install --frozen-lockfile`.
+4. Build Command: `cd ../.. && pnpm --filter @expense-tracker/web build`.
+5. Variable de entorno: `NEXT_PUBLIC_API_URL=https://tu-api.onrender.com`.
+6. En Render, agrega el dominio de Vercel a `CORS_ORIGINS` y usa `COOKIE_SECURE=true`.
+
 ## Migración desde Java
 
 El código Java original se conserva temporalmente en `legacy-java/` para comparar comportamiento. Se eliminará cuando se valide la paridad funcional completa.
 
 ## Roadmap
 
-- [ ] Frontend Next.js (`apps/web`).
+- [x] Base del frontend Next.js (auth, dashboard y keep-alive).
+- [ ] Páginas de cuentas, transacciones, préstamos y ajustes.
 - [x] UUID como identificadores.
 - [x] Autenticación JWT con refresh tokens.
 - [ ] Comando `/resumen` para reportes mensuales.
