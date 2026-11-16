@@ -5,6 +5,7 @@ export * from './model/loan';
 export * from './model/transaction';
 export * from './port/out/account.repository.port';
 export * from './port/out/app-user.repository.port';
+export * from './port/out/database-health.port';
 export * from './port/out/loan.repository.port';
 export * from './port/out/transaction.repository.port';
 export * from './port/out/unit-of-work.port';

@@ -73,7 +73,7 @@ El flujo de dependencias apunta hacia el dominio: los casos de uso solo conocen 
 - Registro conversacional de gastos, ingresos y transferencias.
 - Préstamos con abonos parciales, deuda restante y fecha límite.
 - Reporte de cuentas y saldo total.
-- Endpoint `GET /` para keep-alive en Render.
+- Endpoint `GET /health` con verificación de base de datos y `GET /` como keep-alive legado.
 
 ## Requisitos
 
@@ -169,6 +169,13 @@ Los préstamos y las cuentas se validan contra el usuario autenticado. Los error
 
 Devuelve saldo total, ingresos, egresos, neto del mes, cuentas con saldo, últimas 5 transacciones y préstamos pendientes con su total.
 
+## Health y keep-alive
+
+- `GET /health` — público. Responde `200` con `status`, `uptime`, `timestamp` y `database` cuando la base responde; `503` si la base no está disponible.
+- `GET /` — se mantiene como keep-alive legado y responde texto plano.
+
+Para evitar el spin-down de Render free, configura **cron-job.org** (o similar) para llamar a `https://tu-api.onrender.com/health` cada 5–10 minutos.
+
 ## Scripts
 
 ### Raíz (Turborepo)
@@ -238,7 +245,8 @@ El contenedor aplica las migraciones pendientes antes de arrancar la aplicación
    - `JWT_ACCESS_EXPIRES_IN` y `JWT_REFRESH_EXPIRES_IN` (opcionales)
    - `COOKIE_SECURE=true` en producción
    - `CORS_ORIGINS` con el dominio del frontend
-4. El despliegue se ejecuta automáticamente desde la rama configurada.
+4. Configura un cron externo (cron-job.org) apuntando a `/health` cada 5–10 minutos.
+5. El despliegue se ejecuta automáticamente desde la rama configurada.
 
 ## Migración desde Java
 
