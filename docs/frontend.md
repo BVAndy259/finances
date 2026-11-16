@@ -74,13 +74,29 @@ src/components/
   layout/dashboard-guard.tsx, dashboard-shell.tsx
   loans/loan-form.tsx, loan-payment-form.tsx
   settings/credentials-forms.tsx
+  theme/theme-sync.tsx
   transactions/movement-form.tsx, transfer-form.tsx
-  ui/button.tsx, input.tsx, select.tsx, modal.tsx, spinner.tsx
+  ui/button.tsx, input.tsx, select.tsx, modal.tsx, spinner.tsx, theme-toggle.tsx
 ```
 
 - `DashboardGuard`: espera a que `AuthProvider` restaure la sesión; si no hay usuario redirige a `/login`.
-- `DashboardShell`: sidebar en desktop y navegación horizontal en móvil, con cierre de sesión.
+- `DashboardShell`: sidebar en desktop y navegación horizontal en móvil, con cierre de sesión y toggle de tema.
 - Componentes `ui/*` reutilizables y sin lógica de negocio.
+
+## Tema oscuro
+
+El tema se controla con el atributo `data-theme` en `<html>` (`light` | `dark`) y se persiste en `localStorage` bajo la clave `theme`.
+
+- Un script inline en `app/layout.tsx` lee la preferencia guardada (o `prefers-color-scheme` si no existe) y aplica `data-theme` antes del primer paint para evitar parpadeos.
+- `ThemeSync` (dentro de `Providers`) reaplica el tema tras el remount de StrictMode y sigue los cambios del sistema mientras no haya una preferencia guardada.
+- `ThemeToggle` alterna el tema, lo guarda y actualiza el atributo. Se muestra en el sidebar de escritorio y en el header móvil.
+- En `globals.css` la variante `dark:` de Tailwind 4 se reasigna al atributo:
+  ```css
+  @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+  ```
+  Las utilidades oscuras se escriben como `dark:bg-slate-900`, `dark:text-slate-100`, etc. La paleta usa superficies `slate-900`/`slate-800` sobre fondo `slate-950` y conserva el acento esmeralda.
+
+Utilidades en `src/lib/theme.ts`: `getStoredTheme`, `getPreferredTheme`, `getResolvedTheme`, `applyTheme` y `setTheme`.
 
 ## Estado y datos
 
