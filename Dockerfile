@@ -14,7 +14,8 @@ COPY apps/api ./apps/api
 COPY packages/core ./packages/core
 COPY packages/database ./packages/database
 COPY packages/shared ./packages/shared
-RUN pnpm --filter @expense-tracker/core build \
+RUN pnpm --filter @expense-tracker/shared build \
+  && pnpm --filter @expense-tracker/core build \
   && pnpm --filter @expense-tracker/database build \
   && pnpm --filter @expense-tracker/api build
 
@@ -33,6 +34,7 @@ COPY packages/shared/package.json ./packages/shared/package.json
 RUN pnpm install --frozen-lockfile --prod
 
 COPY --from=build /app/apps/api/dist ./apps/api/dist
+COPY --from=build /app/packages/shared/dist ./packages/shared/dist
 COPY --from=build /app/packages/core/dist ./packages/core/dist
 COPY --from=build /app/packages/database/dist ./packages/database/dist
 
