@@ -1,368 +1,163 @@
 # Gestor de Finanzas
 
-Monorepo con Turborepo para el registro y gestión de finanzas personales (gastos, ingresos, transferencias y préstamos). Incluye backend en NestJS con arquitectura hexagonal, bot de Telegram y frontend en Next.js.
+Monorepo para el registro y gestión de finanzas personales: gastos, ingresos, transferencias y préstamos. Incluye una API en **NestJS** con arquitectura hexagonal, un **bot de Telegram**, un frontend en **Next.js** y persistencia en **PostgreSQL**.
+
+## Características
+
+- Gestión multicuenta (Yape, Efectivo, BCP, Ahorros, etc.).
+- Registro de gastos, ingresos y transferencias desde la web o el bot.
+- Préstamos con abonos parciales, deuda restante y fecha límite.
+- Dashboard con saldo total, ingresos, egresos, neto del mes y préstamos pendientes.
+- Autenticación con JWT y refresh tokens rotativos.
+- Bot de Telegram con flujo conversacional.
+- API con validación de reglas de negocio y ownership por usuario.
+- Export estático del frontend para CDN.
+
+## Stack
+
+| Área | Tecnología |
+|---|---|
+| Monorepo | pnpm workspaces + Turborepo 2 |
+| Backend | NestJS 11 + TypeScript 5 |
+| Frontend | Next.js 16 + React 19 + Tailwind CSS 4 |
+| Datos en frontend | TanStack Query + React Hook Form + Zod |
+| Persistencia | TypeORM + PostgreSQL (Supabase) |
+| Bot | grammY (long polling) |
+| Dinero | `decimal.js` |
+| Auth | Argon2id + JWT (access/refresh) |
+| Testing | Jest + Supertest + `pg-mem` |
+| Contenedores | Docker multi-stage |
 
 ## Estructura
 
 ```
 apps/
-  api/                 # Backend NestJS + bot de Telegram (casos de uso e interfaces)
-  web/                 # Frontend Next.js (auth, dashboard y navegación base)
+  api/                 # Backend NestJS + bot de Telegram
+  web/                 # Frontend Next.js
 packages/
   core/                # Dominio: modelos, puertos y errores
-  database/            # Persistencia TypeORM: entidades, mappers, adapters, migraciones y DataSource
-  shared/              # Tipos y utilidades compartidas
+  database/            # TypeORM: entidades, mappers, adaptadores, migraciones
+  shared/              # Tipos y constantes compartidas
+docs/                  # Documentación detallada
+Dockerfile             # Imagen del backend (contexto: raíz del repo)
+render.yaml            # Web Service opcional en Render
 turbo.json
 pnpm-workspace.yaml
-Dockerfile             # Imagen del backend (contexto: raíz del repo)
 ```
 
-Grafo de dependencias: `shared` → `core` → `database` → `api`, y `apps/web` consume `shared` y la API. El paquete `database` implementa los puertos definidos en `core`; `apps/api` solo orquesta casos de uso e interfaces.
+Grafo de dependencias: `shared → core → database → api`. El frontend (`apps/web`) consume `shared` y la API REST.
 
-## Tecnologías
+## Arquitectura
 
-- **Runtime:** Node.js 22+.
-- **Gestor de paquetes:** pnpm 12+.
-- **Monorepo:** Turborepo 2.
-- **Framework backend:** NestJS 11.
-- **Framework frontend:** Next.js 16 + React 19 + Tailwind CSS 4.
-- **Datos en frontend:** TanStack Query + React Hook Form + Zod.
-- **Lenguaje:** TypeScript 5.
-- **Persistencia:** TypeORM + PostgreSQL (Supabase).
-- **Bot:** grammY con Long Polling.
-- **Dinero:** `decimal.js` para aritmética decimal exacta.
-- **Testing:** Jest + Supertest.
-- **Contenedores:** Docker multi-stage.
+- `packages/core` define modelos de dominio y puertos de salida sin depender de infraestructura.
+- `packages/database` implementa esos puertos con TypeORM y mappers.
+- `apps/api` orquesta casos de uso y expone adaptadores de entrada (HTTP y Telegram).
+- El dinero usa `Decimal` en el dominio y `numeric` en PostgreSQL; la API lo expone como string.
+- Las operaciones compuestas usan un `UnitOfWork` transaccional basado en `AsyncLocalStorage`.
 
-## Arquitectura hexagonal
-
-```
-packages/core/src/
-  model/                       # Entidades de dominio (sin dependencias de infraestructura)
-  port/out/                    # Puertos de salida (repositorios, UnitOfWork)
-  errors/
-packages/database/src/
-  entities/                    # Entidades TypeORM
-  mappers/                     # Conversión dominio ↔ persistencia
-  adapters/                    # Implementación de los puertos
-  migrations/                  # Migraciones
-  data-source.ts               # DataSource para el CLI de TypeORM
-apps/api/src/
-  application/
-    usecase/                   # Casos de uso (servicios de aplicación)
-  interfaces/
-    bot/                       # Adaptador de entrada: bot de Telegram y handlers
-    controllers/               # Adaptador de entrada: HTTP (keep-alive)
-```
-
-El flujo de dependencias apunta hacia el dominio: los casos de uso solo conocen puertos, y la infraestructura implementa esos puertos con TypeORM.
-
-### Equivalencias con la versión Java
-
-| Java / Spring Boot | TypeScript / NestJS |
-|---|---|
-| `@Service` / `@Component` | `@Injectable()` + módulos de Nest |
-| `JpaRepository` | `Repository<T>` de TypeORM |
-| Entidades JPA + mappers | Entidades TypeORM + mappers |
-| `@Transactional` | Puerto `UnitOfWork` + `DataSource.transaction` |
-| `BigDecimal` | `decimal.js` |
-| `TelegramLongPollingBot` | `grammY` |
-| `@RestController` | `@Controller` |
-
-## Características
-
-- Gestión multicuenta (Yape, Efectivo, BCP, Ahorros, etc.).
-- Registro conversacional de gastos, ingresos y transferencias.
-- Préstamos con abonos parciales, deuda restante y fecha límite.
-- Reporte de cuentas y saldo total.
-- Endpoint `GET /health` con verificación de base de datos y `GET /` como keep-alive legado.
+Detalle completo en [Arquitectura](docs/architecture.md).
 
 ## Requisitos
 
-- Node.js 22 o superior.
-- pnpm 12 o superior.
-- PostgreSQL (local o Supabase).
-- Token de bot de Telegram (`@BotFather`).
+- Node.js 22+
+- pnpm 12+
+- PostgreSQL (local o Supabase)
+- Token de bot de Telegram (`@BotFather`), opcional si `BOT_ENABLED=false`
 
-## Configuración local
+## Inicio rápido
 
-1. Instala dependencias desde la raíz:
-   ```bash
-   pnpm install
-   ```
+```bash
+# 1. Instalar dependencias
+pnpm install
 
-2. Crea un `.env` por paquete a partir de su `.env.example`:
+# 2. Crear los .env a partir de los .env.example
+cp apps/api/.env.example apps/api/.env
+cp packages/database/.env.example packages/database/.env
+cp apps/web/.env.example apps/web/.env.local
 
-   `apps/api/.env`:
-   ```env
-   BOT_TOKEN=tu_token_de_telegram
-   TELEGRAM_BOT_USERNAME=kratos_finanzas_bot
-   BOT_ENABLED=true
-   PORT=8080
-   JWT_ACCESS_SECRET=un_secreto_largo_para_access
-   JWT_ACCESS_EXPIRES_IN=15m
-   JWT_REFRESH_SECRET=otro_secreto_largo_para_refresh
-   JWT_REFRESH_EXPIRES_IN=7d
-   COOKIE_SECURE=false
-   CORS_ORIGINS=http://localhost:3000
-   ```
+# 3. Aplicar migraciones
+pnpm db:migrate
 
-   `packages/database/.env`:
-   ```env
-   DATABASE_URL=postgresql://user:password@host:5432/database?sslmode=require
-   DB_LOGGING=false
-   ```
+# 4. Arrancar backend y frontend (o `pnpm dev` para ambos)
+pnpm --filter @expense-tracker/api start:dev
+pnpm --filter @expense-tracker/web dev
+```
 
-   `apps/web/.env.local`:
-   ```env
-   NEXT_PUBLIC_API_URL=http://localhost:8080
-   ```
+Variables mínimas:
 
-   `DATABASE_URL` debe ser una URL estándar de PostgreSQL, **no** una URL JDBC. Si apunta a `localhost`, el parámetro `sslmode` se ignora automáticamente para permitir conexiones locales sin SSL. El paquete `database` carga su propio `.env`, por lo que no duplica variables en la API.
+```env
+# apps/api/.env
+BOT_ENABLED=false
+JWT_ACCESS_SECRET=un_secreto_largo
+JWT_REFRESH_SECRET=otro_secreto_largo
+CORS_ORIGINS=http://localhost:3000
 
-3. Ejecuta las migraciones:
-   ```bash
-   pnpm --filter @expense-tracker/database migration:run
-   ```
+# packages/database/.env
+DATABASE_URL=postgresql://user:password@localhost:5432/database
 
-4. Arranca backend y frontend en desarrollo:
-   ```bash
-   pnpm --filter @expense-tracker/api start:dev
-   pnpm --filter @expense-tracker/web dev
-   ```
+# apps/web/.env.local
+NEXT_PUBLIC_API_URL=http://localhost:8080
+```
 
-   También puedes usar `pnpm dev` para levantar todos los paquetes con Turborepo.
+> `pnpm dev` no ejecuta migraciones automáticamente. `DATABASE_URL` debe ser una URL PostgreSQL estándar (no JDBC).
 
-## Autenticación
+Si ya tienes datos creados desde Telegram y quieres acceder desde la web:
 
-- `POST /auth/register` — crea usuario con email/contraseña, su cuenta "Efectivo" por defecto y devuelve un access token. El refresh token se guarda en una cookie `httpOnly`.
-- `POST /auth/login` — valida credenciales y devuelve un access token + cookie de refresh.
-- `POST /auth/refresh` — rota el refresh token (cookie o body) y devuelve un nuevo access token.
-- `POST /auth/logout` — revoca el refresh token y limpia la cookie.
-- `GET /auth/me` — devuelve el perfil autenticado.
-- `PATCH /auth/credentials` — cambia email y/o contraseña; requiere la contraseña actual.
+```bash
+pnpm auth:set-credentials
+```
 
-Las contraseñas se hashean con **Argon2id** (`m=19456`, `t=2`, `p=1`, salida de 32 bytes, versión 19). Si la política de hashing cambia, el hash se actualiza automáticamente al iniciar sesión. Los access tokens son JWT de corta duración; los refresh tokens se rotan y se almacenan hasheados en la base de datos. El bot de Telegram sigue funcionando con usuarios sin email.
+El comando vincula email/contraseña al mismo usuario sin crear otro.
 
-### Vincular credenciales a un usuario existente de Telegram
-
-Si ya tienes datos creados desde el bot y quieres acceder a ellos desde la web:
-
-1. Asegura que las migraciones estén aplicadas:
-   ```bash
-   pnpm db:migrate
-   ```
-2. Ejecuta el CLI interactivo:
-   ```bash
-   pnpm auth:set-credentials
-   ```
-3. Selecciona el usuario (si hay uno solo se usa automáticamente) y define email y contraseña. La contraseña se escribe con entrada oculta.
-4. Inicia sesión en `/login` con esas credenciales.
-
-El comando actualiza el mismo `app_user`: **no crea otro usuario**, conserva `telegram_chat_id`, cuentas, transacciones y préstamos. La página `/register` sigue disponible para crear usuarios web nuevos.
-
-## API de cuentas
-
-Todas las rutas requieren `Authorization: Bearer <accessToken>` y solo operan sobre las cuentas del usuario autenticado.
-
-- `GET /accounts` — lista las cuentas.
-- `POST /accounts` — crea una cuenta (`name`, `currency` opcional, por defecto `PEN`).
-- `GET /accounts/:id` — detalle de una cuenta.
-- `PATCH /accounts/:id` — actualiza `name` y/o `currency`.
-- `DELETE /accounts/:id` — elimina la cuenta si no tiene transacciones ni préstamos asociados.
-
-## API de transacciones
-
-- `GET /transactions` — lista paginada con filtros `accountId`, `type`, `from`, `to`, `page`, `limit`.
-- `POST /transactions/expense` — registra un egreso (`accountId`, `amount`, `description`, `location` opcional).
-- `POST /transactions/income` — registra un ingreso con el mismo cuerpo.
-- `POST /transactions/transfer` — transfiere entre cuentas propias (`originAccountId`, `destinationAccountId`, `amount`, `description`).
-- `GET /transactions/:id` — detalle de una transacción.
-
-`amount` se envía como string con hasta 2 decimales y debe ser mayor a cero. Todas las operaciones validan que las cuentas pertenezcan al usuario autenticado.
-
-## API de préstamos
-
-- `GET /loans` — lista los préstamos; filtro opcional `status` (`PENDIENTE`, `PAGO_PARCIAL`, `PAGADO`).
-- `POST /loans` — registra un préstamo (`accountId`, `amount`, `debtorName`, `description`, `dueDate` opcional).
-- `GET /loans/:id` — detalle de un préstamo.
-- `POST /loans/:id/payments` — registra un abono (`accountId`, `amount`) y devuelve el préstamo actualizado.
-
-Los préstamos y las cuentas se validan contra el usuario autenticado. Los errores de reglas de negocio (saldo insuficiente, sobrepago, etc.) se responden como `400 Bad Request`.
-
-## API de dashboard
-
-- `GET /dashboard/summary` — resumen del mes actual.
-- `GET /dashboard/summary?month=2026-11` — resumen de un mes específico (`YYYY-MM`).
-
-Devuelve saldo total, ingresos, egresos, neto del mes, cuentas con saldo, últimas 5 transacciones y préstamos pendientes con su total.
-
-## Health y keep-alive
-
-- `GET /health` — público. Responde `200` con `status`, `uptime`, `timestamp` y `database` cuando la base responde; `503` si la base no está disponible.
-- `GET /` — se mantiene como keep-alive legado y responde texto plano.
-
-Para evitar el spin-down de Render free, configura **cron-job.org** (o similar) para llamar a `https://tu-api.onrender.com/health` cada 5–10 minutos.
-
-## Frontend (`apps/web`)
-
-Next.js 16 (App Router) con Tailwind CSS, TanStack Query, React Hook Form y Zod. La estructura es route-driven: `src/app` para rutas y `src/components` / `src/lib` para UI y lógica compartida. Se compila como **export estático** (`output: 'export'`) en `apps/web/out` para desplegarse en Cloudflare Pages.
-
-- `/login` y `/register` — autenticación con email/contraseña.
-- `/dashboard` — resumen del mes consumiendo `GET /dashboard/summary`.
-- `/accounts` — CRUD de cuentas con validación de errores de la API.
-- `/transactions` — historial con filtros y paginación; registro de gastos, ingresos y transferencias.
-- `/loans` — listado por estado, creación de préstamos y registro de abonos.
-- `/settings` — perfil del usuario autenticado.
-
-El access token se mantiene en memoria; la sesión se restaura al recargar usando el refresh token en cookie `httpOnly`. El cliente reintenta una vez tras un `401` renovando el token. Además, mientras la app está abierta se llama a `/health` cada 10 minutos para complementar el cron externo.
-
-## Scripts
-
-> `pnpm dev` no ejecuta migraciones automáticamente. Ejecuta `pnpm db:migrate` antes de arrancar contra una base existente.
-
-### Raíz (Turborepo)
+## Scripts principales
 
 | Comando | Descripción |
 |---|---|
-| `pnpm build` | Build de todos los paquetes |
-| `pnpm dev` | Modo desarrollo de todos los paquetes |
-| `pnpm lint` | ESLint en todos los paquetes |
-| `pnpm test` | Tests unitarios de todos los paquetes |
-| `pnpm typecheck` | Typecheck de todos los paquetes |
-| `pnpm verify` | Lint + typecheck + tests + build |
+| `pnpm dev` | Desarrollo de todos los paquetes |
+| `pnpm build` | Build completo |
+| `pnpm lint` | ESLint |
+| `pnpm typecheck` | TypeScript |
+| `pnpm test` | Tests unitarios |
+| `pnpm test:e2e` | Tests e2e |
+| `pnpm verify` | Build + lint + typecheck + tests |
+| `pnpm db:migrate` | Aplica migraciones |
+| `pnpm db:show` | Estado de migraciones |
+| `pnpm auth:set-credentials` | Vincula credenciales web a un usuario existente |
 
-### API (`apps/api`)
+Lista completa en [Desarrollo](docs/development.md).
 
-| Comando | Descripción |
+## Documentación
+
+| Documento | Contenido |
 |---|---|
-| `pnpm --filter @expense-tracker/api start:dev` | Servidor en modo watch |
-| `pnpm --filter @expense-tracker/api build` | Compila a `apps/api/dist` |
-| `pnpm --filter @expense-tracker/api start:prod` | Ejecuta `dist/main.js` |
-| `pnpm --filter @expense-tracker/api lint` | ESLint con autofix |
-| `pnpm --filter @expense-tracker/api test` | Tests unitarios |
-| `pnpm --filter @expense-tracker/api test:e2e` | Tests e2e |
+| [docs/README.md](docs/README.md) | Índice general |
+| [Arquitectura](docs/architecture.md) | Hexagonal, dependencias, flujos y decisiones |
+| [Backend](docs/backend.md) | Módulos, casos de uso, auth y bot |
+| [API HTTP](docs/api.md) | Endpoints, cuerpos, respuestas y errores |
+| [Frontend](docs/frontend.md) | Rutas, componentes, estado y build estático |
+| [Base de datos](docs/database.md) | Esquema, entidades, mappers y migraciones |
+| [Despliegue](docs/deployment.md) | Docker, Render, Cloudflare Pages y CI |
+| [Desarrollo](docs/development.md) | Setup, scripts, testing y convenciones |
 
-### Frontend (`apps/web`)
+Recursos de base de datos: [schema.sql](docs/database/schema.sql), [finance.dbml](docs/database/finance.dbml) y [diagrama ER](docs/database/er-diagram.png).
 
-| Comando | Descripción |
-|---|---|
-| `pnpm --filter @expense-tracker/web dev` | Next.js en modo desarrollo |
-| `pnpm --filter @expense-tracker/web build` | Genera el export estático en `apps/web/out` |
-| `pnpm dlx serve apps/web/out` | Previsualiza el export estático |
-| `pnpm --filter @expense-tracker/web lint` | ESLint |
-| `pnpm --filter @expense-tracker/web typecheck` | TypeScript |
+## Despliegue
 
-### Base de datos (`packages/database`)
+- **Backend:** Docker en Render (health check `/health`).
+- **Frontend:** export estático en Cloudflare Pages.
+- **Base de datos:** PostgreSQL en Supabase.
+- **Keep-alive:** cron externo a `/health` cada 5–10 minutos.
 
-| Comando | Descripción |
-|---|---|
-| `pnpm --filter @expense-tracker/database migration:generate src/migrations/Nombre` | Genera migración |
-| `pnpm --filter @expense-tracker/database migration:run` | Aplica migraciones |
-| `pnpm --filter @expense-tracker/database migration:revert` | Revierte la última migración |
-| `pnpm --filter @expense-tracker/database migration:show` | Muestra el estado de las migraciones |
-| `pnpm --filter @expense-tracker/database schema:log` | Muestra el SQL pendiente entre entidades y BD |
-
-### Cuenta (`apps/api`)
-
-| Comando | Descripción |
-|---|---|
-| `pnpm auth:set-credentials` | Vincula email/password a un usuario existente de Telegram |
+Instrucciones detalladas en [Despliegue](docs/deployment.md).
 
 ## CI
 
-El workflow `.github/workflows/ci.yml` se ejecuta en cada push/PR y valida el monorepo completo:
+El workflow `.github/workflows/ci.yml` ejecuta lint, typecheck, build, migraciones reales sobre PostgreSQL 17, tests unitarios/e2e y verificación Docker con `GET /health` en cada push/PR.
 
-1. `pnpm lint`, `pnpm typecheck` y `pnpm build`.
-2. Levanta PostgreSQL 17 y ejecuta **las migraciones reales**.
-3. `pnpm test` y `pnpm test:e2e`.
-4. Construye la imagen Docker, arranca el contenedor con PostgreSQL y verifica `GET /health`.
+## Estado
 
-Esto cubre lo que los tests unitarios con `pg-mem` no validan: la ejecución de las migraciones y el arranque real del contenedor.
+Proyecto en desarrollo activo. Consulta el [roadmap](docs/development.md#roadmap).
 
-## Migraciones y base de datos existente
+## Licencia
 
-La migración inicial es idempotente: crea las tablas si no existen y agrega las columnas `paid_amount` y `due_date` si faltan. El esquema refleja el script SQL original, por lo que los campos que permiten `NULL` en la base de datos se mantienen así; los mappers validan los invariantes de negocio al convertir a dominio.
-
-La migración `ConvertIdsToUuid` convierte las claves primarias y foráneas de `bigint` a `uuid` preservando los datos existentes. **Haz un backup antes de ejecutarla**: su `down()` no revierte automáticamente la conversión.
-
-Las tres migraciones (`InitialSchema`, `ConvertIdsToUuid`, `AddAuthFields`) se validaron contra PostgreSQL 17 ejecutándolas en una base temporal limpia. El CI repite esta validación en cada push/PR.
-
-Para verificar diferencias contra una base existente:
-
-```bash
-pnpm --filter @expense-tracker/database schema:log
-```
-
-## Docker
-
-El `Dockerfile` vive en la raíz porque necesita el contexto completo del monorepo:
-
-```bash
-docker build -t expense-tracker .
-docker run --env-file apps/api/.env --env-file packages/database/.env -p 8080:8080 expense-tracker
-```
-
-El contenedor aplica las migraciones pendientes antes de arrancar la aplicación.
-
-## Despliegue en Render
-
-El archivo `render.yaml` incluye una definición opcional del Web Service (Docker, plan free, health check en `/health` y variables). Si ya tienes el servicio creado, puedes configurarlo manualmente:
-
-1. Conecta el repositorio como Web Service.
-2. Usa la raíz del repositorio como contexto y el `Dockerfile` de la raíz.
-3. Configura las variables de entorno:
-   - `DATABASE_URL`
-   - `BOT_TOKEN`
-   - `TELEGRAM_BOT_USERNAME` (opcional)
-   - `PORT` (opcional, por defecto `8080`)
-   - `JWT_ACCESS_SECRET` y `JWT_REFRESH_SECRET`
-   - `JWT_ACCESS_EXPIRES_IN` y `JWT_REFRESH_EXPIRES_IN` (opcionales)
-   - `COOKIE_SECURE=true` en producción
-   - `CORS_ORIGINS` con el dominio del frontend
-4. Configura un cron externo (cron-job.org) apuntando a `/health` cada 5–10 minutos.
-5. El despliegue se ejecuta automáticamente desde la rama configurada.
-
-## Despliegue del frontend en Cloudflare Pages
-
-El frontend se publica como export estático; no requiere SSR ni Workers.
-
-1. Crea un proyecto en Cloudflare Pages conectado al repositorio.
-2. **Root directory:** raíz del repositorio.
-3. **Install command:** `pnpm install --frozen-lockfile`.
-4. **Build command:** `pnpm turbo run build --filter=@expense-tracker/web`.
-5. **Build output directory:** `apps/web/out`.
-6. Variables de build:
-   - `NEXT_PUBLIC_API_URL=https://tu-api.onrender.com`
-   - `NODE_VERSION=22`
-   - `PNPM_VERSION=12.14.0` si Cloudflare no detecta pnpm.
-7. En Render, agrega `https://<proyecto>.pages.dev` y tu dominio personalizado a `CORS_ORIGINS`.
-8. Mantén `COOKIE_SECURE=true` para las cookies cross-site.
-
-Cada ruta se genera como HTML estático; el acceso a datos y la sesión se resuelven en el navegador contra la API.
-
-## Checklist antes de mergear a `master`
-
-1. Confirmar que el CI está en verde (incluye migraciones reales y Docker).
-2. Crear un backup de la base de producción.
-3. Ejecutar las migraciones contra una copia/staging antes de producción.
-4. Configurar en Render: `DATABASE_URL`, `BOT_TOKEN`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `COOKIE_SECURE=true`, `CORS_ORIGINS`, `BOT_ENABLED`.
-5. Configurar el cron externo apuntando a `/health` cada 5–10 minutos.
-6. Mergear las ramas en orden y verificar `/health` del servicio desplegado.
-7. Desplegar el frontend en Cloudflare Pages y probar login, dashboard, cuentas, transacciones y préstamos.
-
-## Migración desde Java
-
-El código Java original se conserva temporalmente en `legacy-java/` para comparar comportamiento. Se eliminará cuando se valide la paridad funcional completa.
-
-## Roadmap
-
-- [x] Base del frontend Next.js (auth, dashboard y keep-alive).
-- [x] Página de cuentas (CRUD).
-- [x] Página de transacciones (filtros, gastos, ingresos y transferencias).
-- [x] Página de préstamos (listado, creación y abonos).
-- [x] CI con migraciones reales, tests y verificación Docker.
-- [x] UUID como identificadores.
-- [x] Autenticación JWT con refresh tokens.
-- [ ] Comando `/resumen` para reportes mensuales.
-- [ ] Exportación de datos a Excel mediante `/exportar`.
+UNLICENSED — uso privado.
