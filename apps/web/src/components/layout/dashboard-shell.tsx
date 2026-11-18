@@ -45,8 +45,8 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-slate-50 transition-colors dark:bg-slate-950 md:flex">
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 md:flex">
-        <div className="mb-8 flex items-center justify-between gap-3 px-2">
+      <aside className="hidden w-64 shrink-0 flex-col border-r border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 md:sticky md:top-0 md:flex md:h-screen md:max-h-screen">
+        <div className="mb-8 flex shrink-0 items-center justify-between gap-3 px-2">
           <div className="flex items-center gap-3">
             <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-600 text-lg font-bold text-white">
               F
@@ -63,7 +63,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           <ThemeToggle className="-mr-2" />
         </div>
 
-        <nav className="space-y-1">
+        <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const active = isActive(pathname, item.href);
@@ -86,7 +86,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           })}
         </nav>
 
-        <div className="mt-auto rounded-xl bg-slate-50 p-3 dark:bg-slate-800/60">
+        <div className="mt-4 shrink-0 rounded-xl bg-slate-50 p-3 dark:bg-slate-800/60">
           <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
             {user?.alias}
           </p>
