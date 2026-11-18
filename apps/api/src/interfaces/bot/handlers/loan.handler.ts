@@ -106,6 +106,12 @@ export class LoanHandler {
       return;
     }
 
+    if (!loanDescription?.trim()) {
+      ctx.session.state = BotState.WaitingLoanDescription;
+      await ctx.reply('El motivo es obligatorio. ¿Motivo del préstamo? (Ej: Para el taxi)');
+      return;
+    }
+
     let dueDate: string | null = null;
     if (text.toUpperCase() !== 'NO') {
       if (!isMatch(text, 'dd/MM/yyyy')) {
@@ -129,7 +135,7 @@ export class LoanHandler {
         account,
         amount,
         debtor,
-        loanDescription ?? '',
+        loanDescription.trim(),
         dueDate,
       );
       await ctx.reply(
