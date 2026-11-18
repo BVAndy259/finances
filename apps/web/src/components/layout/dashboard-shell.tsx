@@ -14,7 +14,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/button';
@@ -42,15 +42,13 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
-  const [collapsed, setCollapsed] = useState(false);
-
-  useEffect(() => {
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
     try {
-      setCollapsed(window.localStorage.getItem(COLLAPSED_KEY) === '1');
+      return window.localStorage.getItem(COLLAPSED_KEY) === '1';
     } catch {
-      // ignore
+      return false;
     }
-  }, []);
+  });
 
   const toggleCollapsed = () => {
     setCollapsed((prev) => {
