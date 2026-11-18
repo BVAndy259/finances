@@ -234,6 +234,7 @@ Query opcional `status`: `PENDIENTE`, `PAGO_PARCIAL`, `PAGADO`.
     "userId": "uuid",
     "accountId": "uuid",
     "debtorName": "Juan",
+    "description": "Para el taxi",
     "amount": "100.00",
     "paidAmount": "30.00",
     "remainingAmount": "70.00",
@@ -256,7 +257,7 @@ Query opcional `status`: `PENDIENTE`, `PAGO_PARCIAL`, `PAGADO`.
 }
 ```
 
-`dueDate` opcional. Descuenta de la cuenta, crea `EGRESO_PRESTAMO` y el préstamo. `400` si no hay saldo.
+`dueDate` opcional. Descuenta de la cuenta, crea `EGRESO_PRESTAMO` y el préstamo. `description` (motivo) es obligatoria y se persiste en `loan.description`. `400` si no hay saldo.
 
 ### `GET /loans/:id`
 
@@ -307,6 +308,7 @@ Query opcional `month=YYYY-MM` (default: mes actual). Devuelve:
         "id": "uuid",
         "accountId": "uuid",
         "debtorName": "Juan",
+        "description": "Para el taxi",
         "amount": "100.00",
         "paidAmount": "30.00",
         "remainingAmount": "70.00",

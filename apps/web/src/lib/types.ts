@@ -95,6 +95,7 @@ export interface Loan {
   userId: string;
   accountId: string;
   debtorName: string;
+  description: string | null;
   amount: string;
   paidAmount: string;
   remainingAmount: string;

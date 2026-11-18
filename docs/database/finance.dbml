@@ -38,6 +38,7 @@ Table loan {
   user_id uuid [not null, ref: > app_user.id]
   account_id uuid [not null, ref: > account.id]
   debtor_name varchar(255)
+  description varchar(255) [note: 'Motivo del préstamo (obligatorio)']
   amount numeric(38,2) [not null, note: 'Monto prestado']
   paid_amount numeric(12,2) [not null, note: 'Total abonado']
   due_date date [note: 'Fecha límite de pago (opcional)']

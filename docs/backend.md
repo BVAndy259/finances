@@ -75,7 +75,7 @@ flowchart LR
 
 | Método | Reglas |
 |---|---|
-| `grantLoan` | Valida saldo; descuenta de la cuenta, crea `EGRESO_PRESTAMO` y el préstamo (`PENDIENTE`). |
+| `grantLoan` | Valida saldo y motivo no vacío; descuenta de la cuenta, crea `EGRESO_PRESTAMO` y el préstamo (`PENDIENTE`) persistiendo `description`. |
 | `payLoan` | Rechaza préstamo pagado o abono mayor a la deuda; suma a la cuenta, crea `INGRESO_COBRO` y actualiza `paidAmount`/`status`. |
 | `getPendingLoans` | Préstamos `PENDIENTE` y `PAGO_PARCIAL`. |
 | `listLoans` | Filtro opcional por estado. |

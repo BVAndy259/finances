@@ -205,6 +205,11 @@ export default function LoansPage() {
                       <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                         {loan.debtorName}
                       </h2>
+                      <p className="mt-0.5 line-clamp-2 text-xs text-slate-600 dark:text-slate-300">
+                        {loan.description?.trim()
+                          ? `Motivo: ${loan.description}`
+                          : 'Sin motivo'}
+                      </p>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
                         {accountNames.get(loan.accountId) ?? 'Cuenta'} ·{' '}
                         {formatDate(loan.loanDate)}

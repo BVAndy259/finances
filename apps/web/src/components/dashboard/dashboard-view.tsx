@@ -249,6 +249,11 @@ export function DashboardView() {
                       <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
                         {loan.debtorName}
                       </p>
+                      <p className="truncate text-xs text-slate-600 dark:text-slate-300">
+                        {loan.description?.trim()
+                          ? `Motivo: ${loan.description}`
+                          : 'Sin motivo'}
+                      </p>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
                         {loanStatusLabel(loan.status)}
                         {loan.dueDate ? ` · vence ${loan.dueDate}` : ''}

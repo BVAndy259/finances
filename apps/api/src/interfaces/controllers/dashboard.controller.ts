@@ -32,6 +32,7 @@ interface DashboardResponse {
       id?: string;
       accountId: string;
       debtorName: string;
+      description: string | null;
       amount: string;
       paidAmount: string;
       remainingAmount: string;
@@ -99,6 +100,7 @@ export class DashboardController {
       id: loan.id,
       accountId: loan.accountId,
       debtorName: loan.debtorName,
+      description: loan.description ?? null,
       amount: loan.amount.toString(),
       paidAmount: loan.paidAmount.toString(),
       remainingAmount: loan.remainingAmount.toString(),

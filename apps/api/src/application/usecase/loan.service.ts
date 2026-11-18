@@ -44,6 +44,10 @@ export class LoanService {
     location = 'Bot',
   ): Promise<Loan> {
     return this.unitOfWork.run(async () => {
+      const trimmedDescription = description?.trim() ?? '';
+      if (!trimmedDescription) {
+        throw new BusinessRuleError('El motivo del préstamo es obligatorio');
+      }
       if (originAccount.balance.lt(amount)) {
         throw new BusinessRuleError(
           'Saldo insuficiente en la cuenta: ' + originAccount.name,
@@ -57,7 +61,7 @@ export class LoanService {
       transaction.accountId = originAccount.id!;
       transaction.transactionType = 'EGRESO_PRESTAMO';
       transaction.amount = amount;
-      transaction.description = `Préstamo a ${debtorName}: ${description}`;
+      transaction.description = `Préstamo a ${debtorName}: ${trimmedDescription}`;
       transaction.location = location;
       await this.transactionRepository.save(transaction);
 
@@ -65,6 +69,7 @@ export class LoanService {
       loan.userId = originAccount.userId;
       loan.accountId = originAccount.id!;
       loan.debtorName = debtorName;
+      loan.description = trimmedDescription;
       loan.amount = amount;
       loan.dueDate = dueDate;
       return this.loanRepository.save(loan);

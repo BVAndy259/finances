@@ -25,6 +25,7 @@ export class LoanMapper {
     loan.userId = entity.user.id;
     loan.accountId = entity.account.id;
     loan.debtorName = entity.debtorName ?? '';
+    loan.description = entity.description ?? null;
     loan.amount = entity.amount;
     loan.paidAmount = entity.paidAmount ?? new Decimal(0);
     loan.dueDate = entity.dueDate;
@@ -45,6 +46,7 @@ export class LoanMapper {
     entity.user = userRef;
     entity.account = accountRef;
     entity.debtorName = domain.debtorName;
+    entity.description = domain.description ?? null;
     entity.amount = domain.amount;
     entity.paidAmount = domain.paidAmount;
     entity.dueDate = domain.dueDate;

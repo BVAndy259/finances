@@ -7,6 +7,7 @@ export class Loan {
   userId!: string;
   accountId!: string;
   debtorName!: string;
+  description: string | null = null;
   amount!: Decimal;
   paidAmount: Decimal = new Decimal(0);
   dueDate: string | null = null;

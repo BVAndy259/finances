@@ -32,6 +32,9 @@ export class LoanEntity {
   @Column({ name: 'debtor_name', type: 'varchar', length: 255, nullable: true })
   debtorName!: string | null;
 
+  @Column({ name: 'description', type: 'varchar', length: 255, nullable: true })
+  description!: string | null;
+
   @Column({
     name: 'amount',
     type: 'numeric',
