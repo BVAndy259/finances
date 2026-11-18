@@ -56,6 +56,7 @@ erDiagram
         uuid user_id FK
         uuid account_id FK
         varchar debtor_name
+        varchar description "motivo, obligatorio"
         numeric amount "numeric 38,2"
         numeric paid_amount "numeric 12,2"
         date due_date "opcional"
@@ -113,6 +114,7 @@ Invariante de dominio: al menos `email` o `telegram_chat_id` debe existir (valid
 | `user_id` | `uuid` | NOT NULL, FK → `app_user.id` (`fkjcauugddigslh9xi7v2n9tiwj`) |
 | `account_id` | `uuid` | NOT NULL, FK → `account.id` (`fkgv9cgsh4k76wmaf83ktoekpub`) |
 | `debtor_name` | `varchar(255)` | NULL |
+| `description` | `varchar(255)` | NULL (históricos; obligatorio hacia adelante) |
 | `amount` | `numeric(38,2)` | NOT NULL |
 | `paid_amount` | `numeric(12,2)` | NOT NULL |
 | `due_date` | `date` | NULL |
@@ -205,6 +207,7 @@ Esto hace atómicas las operaciones de gasto/ingreso/transferencia/préstamo (sa
 | `1780000000000-InitialSchema` | Crea tablas si no existen (`IF NOT EXISTS`) y agrega `paid_amount`/`due_date` si faltan. Idempotente. |
 | `1780000001000-ConvertIdsToUuid` | Convierte PK/FK de `bigint` a `uuid` preservando datos (requiere `pgcrypto`). **Su `down()` no revierte**: restaurar desde backup. |
 | `1780000002000-AddAuthFields` | Hace `telegram_chat_id` nullable y agrega `email`, `password_hash`, `refresh_token_hash` + unique de email. |
+| `1780000003000-AddLoanDescription` | Agrega `loan.description` (motivo obligatorio) + backfill desde `transaction` (`EGRESO_PRESTAMO` con formato `Préstamo a X: motivo`). |
 
 > ⚠️ Haz un **backup** antes de ejecutar `ConvertIdsToUuid` en una base con datos.
 

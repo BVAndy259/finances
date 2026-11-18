@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS "loan" (
   "user_id" uuid NOT NULL,
   "account_id" uuid NOT NULL,
   "debtor_name" varchar(255),
+  "description" varchar(255),
   "amount" numeric(38, 2) NOT NULL,
   "paid_amount" numeric(12, 2) NOT NULL,
   "due_date" date,
@@ -85,6 +86,7 @@ COMMENT ON COLUMN "transaction"."description" IS 'Ej: Almuerzo, Pasajes, Sueldo'
 COMMENT ON COLUMN "transaction"."location" IS 'Ej: Mercado Central, Transporte. Origen del registro (Bot/Web).';
 
 COMMENT ON COLUMN "loan"."debtor_name" IS 'Nombre del deudor';
+COMMENT ON COLUMN "loan"."description" IS 'Motivo del préstamo (obligatorio desde AddLoanDescription)';
 COMMENT ON COLUMN "loan"."amount" IS 'Monto prestado (numeric 38,2)';
 COMMENT ON COLUMN "loan"."paid_amount" IS 'Total abonado hasta la fecha (numeric 12,2)';
 COMMENT ON COLUMN "loan"."due_date" IS 'Fecha límite de pago (opcional)';
