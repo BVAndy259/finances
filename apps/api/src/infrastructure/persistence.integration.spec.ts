@@ -57,6 +57,7 @@ const SCHEMA = `
     "user_id" uuid REFERENCES "app_user"("id"),
     "account_id" uuid REFERENCES "account"("id"),
     "debtor_name" varchar,
+    "description" varchar,
     "amount" numeric(12,2),
     "paid_amount" numeric(12,2) NOT NULL DEFAULT 0,
     "due_date" date,
@@ -191,6 +192,7 @@ describe('TypeORM persistence integration', () => {
     );
 
     expect(loan.id).toMatch(UUID_PATTERN);
+    expect(loan.description).toBe('Taxi');
 
     const paidLoan = await loanService.payLoan(
       loan.id!,
